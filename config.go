@@ -96,12 +96,9 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 		*/
 
 		sensorString := fmt.Sprintf("%s: %d", details.name, details.value)
-		sensorString += details.unit
-		/*
-		if details.unit != "%" {
-			sensorString += details.unit
+		if details.unit == "%" {
+			sensorString += "%%"
 		}
-		*/
 		//fmt.Println(sensorString)
 		if details.status == 2 {
 			overall.AddOK(sensorString)
