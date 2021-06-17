@@ -14,7 +14,7 @@ func main () {
 	defer check.CatchPanic()
 
     plugin := check.NewConfig()
-    plugin.Name = "notify-brevisone"
+    plugin.Name = "check_akcp"
     plugin.Readme = readme
     plugin.Timeout = 30
     plugin.Version = "0.1"

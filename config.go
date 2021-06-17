@@ -7,6 +7,8 @@ import (
 
 	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/go-check/result"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
 	"github.com/gosnmp/gosnmp"
 	"github.com/spf13/pflag"
 )
@@ -19,7 +21,8 @@ type Config struct {
 	community		string
 	port			uint16
 	mode			string
-	sensor			string
+	device			string
+	sensorPort			string
 	// authProtocol		string
 	// authPassword 	string
 	// privProtocol		string
@@ -28,17 +31,125 @@ type Config struct {
 
 // Modes
 const (
-	listSensors uint = iota
+	queryAllSensors uint = iota
+	listPossibleSensors
+	single
+	temperaturSensors
+	humiditySensors
+	airflowSensors
+	drycontactSensors
+	current4to20mA
+	dcVoltage
+	acVoltage
+	waterRope
+	power
+	fuel
+	tankSender
+	temperatureArray
+	towerLED
 )
+
+var modes = map[string] uint {
+	"queryAllSensors" : queryAllSensors,
+	"single" :	single,
+	"temperatureSensors" : temperaturSensors,
+	"humiditySensors" : humiditySensors,
+}
 
 func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	fs.StringVarP(&c.hostname, "host", "h", "", "Hostname or IP of the targeted device (required)")
 	fs.StringVarP(&c.snmp_version_param, "snmp_version", "", "2c", "Version of SNMP to use (1|2c, default: 2c)")
 	fs.StringVarP(&c.community, "community", "c", "public", "SNMP Community string (default: \"public\")")
 	fs.Uint16VarP(&c.port, "port", "p", 161, "SNMP Port (default: \"161\")")
+	fs.StringVarP(&c.device, "device", "", "sensorProbe+", `Device type, may be one of:
+	- sensorProbe
+	- securityProbe
+	- sensorProbe+`)
+	fs.StringVarP(&c.mode, "mode", "m", "queryAllSensors", `Usage mode (default: queryAllSensors)
+	Possible modes:
+	- queryAllSensors: Query all the sensors and show their value and state
+	- single: Query a single sensor (sensorPort must be set)
+	- temperaturSensors: Query all the temperature sensors
+	- humiditySensors: Query all the humidity sensors
+
+	The following modes will query the respective sensor types:
+	- temperature
+	- humidity_dual
+	- temperature_dual
+	- four_20mA
+	- dcvoltage
+	- airflow
+	- dry_inout
+	- dry_in
+	- motion
+	- water
+	- security
+	- siren
+	- acvoltage
+	- relay
+	- thermocouple
+	- smoke
+	- drycontact_array
+	- temperature_array
+	- waterrope
+	- fuellevel
+	- tanksender
+	- five_drycontacts
+	- irms
+	- vrms
+	- watt
+	- energy
+	- powerfactor
+	- reactive
+	- cbstatus
+	- handlelock
+	- air_pressure
+	- ir_remote
+	- digital_amp
+	- digital_watt
+	- valve_status
+	- lcd
+	- buzzer
+	- tower_led
+	- pulse_counter
+	- flow
+	- edge_counter
+	- tanklevel_height
+	- tanklevel_volume
+	- diff_pressure
+	- tanklevel_2m
+	- tanklevel_5m
+	- tanklevel_10m
+	- tanklevel_15m
+	- tanklevel_20m
+	- thermostat
+	- virtual
+	- sound
+	- software_motion
+	- board_state
+	- power_meter
+	- access
+	- door
+	- reader`)
+	fs.StringVarP(&c.sensorPort, "sensorPort", "", "", "Sensor Port (required for single mode)")
 }
 
 func (c *Config) Validate() error {
+
+	val , ok := modes[c.mode]
+	if !ok {
+		if c.device == "sensorProbePlus" {
+			_, ok = sensorProbePlus.SensorsTypes[c.mode]
+			if !ok {
+				return errors.New("Mode is not a valid value")
+			}
+		}
+	} else {
+		if val == single && c.sensorPort == "" {
+				return errors.New("No sensorPort was given")
+		}
+	}
+
 	if c.snmp_version_param == "1" {
 		c.snmp_version = gosnmp.Version1
 	} else if c.snmp_version_param == "2c" {
@@ -76,14 +187,14 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 	defer params.Conn.Close()
 
 	// Get all sensors
-	sensors, err := querySensorList(params)
+	sensors, err := akcp.QuerySensorList(params)
 	if err != nil {
 		check.ExitError(err)
 	}
 
 	for _, sensor := range sensors {
 		//fmt.Printf("%d: %s\n", num, sensor)
-		details, err := querySensorDetails(params, sensor)
+		details, err := akcp.QuerySensorDetails(params, sensor)
 		if err != nil {
 			check.ExitError(err)
 		}
@@ -95,58 +206,21 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 		fmt.Printf("Status: %d\n", details.status)
 		*/
 
-		sensorString := fmt.Sprintf("%s: %d", details.name, details.value)
-		if details.unit == "%" {
+		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
+		if details.Unit == "%" {
 			sensorString += "%%"
 		}
 		//fmt.Println(sensorString)
-		if details.status == 2 {
+		if details.Status == 2 {
 			overall.AddOK(sensorString)
-		} else if details.status == 3 || details.status == 5 {
+		} else if details.Status == 3 || details.Status == 5 {
 			overall.AddWarning(sensorString)
-		} else if details.status == 6 || details.status == 4 {
+		} else if details.Status == 6 || details.Status == 4 {
 			overall.AddCritical(sensorString)
 		} else {
 			overall.AddUnknown(sensorString)
 		}
 	}
 
-	return nil
-}
-
-func ValueToString(pdu gosnmp.SnmpPDU) string {
-	switch pdu.Type {
-	case gosnmp.OctetString:
-		return string(pdu.Value.([]byte))
-	default:
-		//fmt.Printf("TYPE %d: %d\n", pdu.Type, gosnmp.ToBigInt(pdu.Value))
-		return fmt.Sprint("%d", gosnmp.ToBigInt(pdu.Value))
-	}
-}
-
-func ValueToUint64(pdu gosnmp.SnmpPDU) (uint64, error) {
-	switch pdu.Type {
-	case gosnmp.Integer:
-		var val = gosnmp.ToBigInt(pdu.Value)
-		if val.IsUint64() {
-			return val.Uint64(), nil
-		} else {
-			return 0, errors.New("Value not in uint64")
-		}
-	default:
-		return 0, errors.New("Value is not an integer")
-	}
-}
-
-func printValue(pdu gosnmp.SnmpPDU) error {
-	fmt.Printf("%s = ", pdu.Name)
-
-	switch pdu.Type {
-	case gosnmp.OctetString:
-		b := pdu.Value.([]byte)
-		fmt.Printf("STRING: %s\n", string(b))
-	default:
-		fmt.Printf("TYPE %d: %d\n", pdu.Type, gosnmp.ToBigInt(pdu.Value))
-	}
 	return nil
 }
