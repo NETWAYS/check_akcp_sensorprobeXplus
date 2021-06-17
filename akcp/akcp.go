@@ -4,6 +4,7 @@ import (
 	"github.com/gosnmp/gosnmp"
 	"fmt"
 	"errors"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
 )
 
 
@@ -33,59 +34,43 @@ type SensorDetails struct {
 
 const akcpBaseOID = ".1.3.6.1.4.1.3854"
 
-// AKCP Subtree
 const (
-	akcpSensorProbe = akcpBaseOID + ".1"
-	akcpSecurityProbe = akcpBaseOID + ".2"
-	akcpPlusSeries = akcpBaseOID + ".3"
+	SensorProbe_type = iota
+	SecurityProbe_type
+	SensorProbePlus_type
 )
 
-// TODO sensorProbe
-// TODO securityProbe
+func GetSensorTypeInt (type_string string, device_type int) (uint32, error) {
+	switch device_type {
+		case SensorProbePlus_type: {
+			val, ok := sensorProbePlus.SensorsTypes[type_string]
+			if !ok {
+				return 0, errors.New("Sensor type not found for this device")
+			}
+			return uint32(val), nil
+		}
+		default:
+			// TODO
+			return 0, errors.New("Other devices not yet implemented")
+	}
+}
 
-// plusSeries
-const (
-	akcpPlusSeriesSensors = akcpPlusSeries + ".5"
-)
-
-const (
-	PlsSrs_commonTable = akcpPlusSeriesSensors + ".1"
-	PlsSrs_temeratureTable = akcpPlusSeriesSensors + ".2"
-	PlsSrs_humidityTable = akcpPlusSeriesSensors + ".3"
-	PlsSrs_drycontactTable = akcpPlusSeriesSensors + ".4"
-	PlsSrs_current4to20mATable = akcpPlusSeriesSensors + ".5"
-	PlsSrs_dcVoltageTable = akcpPlusSeriesSensors + ".6"
-	PlsSrs_airflowTable = akcpPlusSeriesSensors + ".7"
-	PlsSrs_motionTable = akcpPlusSeriesSensors + ".8"
-	PlsSrs_waterTable = akcpPlusSeriesSensors + ".9"
-	PlsSrs_securityTable = akcpPlusSeriesSensors + ".10"
-	PlsSrs_sirenTable = akcpPlusSeriesSensors + ".11"
-	PlsSrs_relayTable = akcpPlusSeriesSensors + ".12"
-	PlsSrs_acVoltageTable = akcpPlusSeriesSensors + ".13"
-	PlsSrs_smokeTable = akcpPlusSeriesSensors + ".14"
-	PlsSrs_waterRopeTable = akcpPlusSeriesSensors + ".21"
-	PlsSrs_powerTable = akcpPlusSeriesSensors + ".22"
-	PlsSrs_fuelTable = akcpPlusSeriesSensors + ".24"
-	PlsSrs_tankSenderTable = akcpPlusSeriesSensors + ".26"
-	PlsSrs_doorTable = akcpPlusSeriesSensors + ".27"
-	PlsSrs_temperatureArrayTable = akcpPlusSeriesSensors + ".28"
-	PlsSrs_towerLEDTable = akcpPlusSeriesSensors + ".29"
-	PlsSrs_enumTable = akcpPlusSeriesSensors + ".31"
-)
-
-const (
-	PlsSrs_sensorBase = akcpBaseOID + ".3.5.1.1"
-	sensorIdListBase = akcpBaseOID + ".3.5.1.1.1"
-	sensorNameBase = akcpBaseOID + ".3.5.1.1.2"
-	sensorValueBase = akcpBaseOID + ".3.5.1.1.4"
-	sensorUnitBase = akcpBaseOID + ".3.5.1.1.5"
-)
-
-func QuerySensorList(params *gosnmp.GoSNMP) (sensors []string, err error) {
+func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
 	// Fetches the IDs of all sensors
 	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
 
-	results, err := params.BulkWalkAll(sensorIdListBase)
+	var oid string
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			oid = akcpBaseOID + sensorProbePlus.SensorIdListBase
+		}
+		default : {
+			return nil, errors.New("Not yet implemented")
+		}
+	}
+	//fmt.Println(oid)
+	results, err := params.BulkWalkAll(oid)
 	if err != nil {
 		return nil, err
 	}
@@ -95,27 +80,30 @@ func QuerySensorList(params *gosnmp.GoSNMP) (sensors []string, err error) {
 		//fmt.Println(variable.Name)
 	}
 
+	//fmt.Println(sensors)
 	return sensors, nil
 }
 
-func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string) (SensorDetails, error) {
+func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
-
+	var tmp_oid string
 	var oids = make([]string, 5, 5)
-	oids[0] = PlsSrs_sensorBase + ".2." + sensorIndex
-	oids[1] = PlsSrs_sensorBase + ".3." + sensorIndex
-	oids[2] = PlsSrs_sensorBase + ".4." + sensorIndex
-	oids[3] = PlsSrs_sensorBase + ".5." + sensorIndex
-	oids[4] = PlsSrs_sensorBase + ".6." + sensorIndex
-	/*
-	var oids = [...]string {
-		PlsSrs_sensorBase + ".2" + sensorIndex, // Description
-		PlsSrs_sensorBase + ".3" + sensorIndex, // Type
-		PlsSrs_sensorBase + ".4" + sensorIndex,  // Value
-		PlsSrs_sensorBase + ".5" + sensorIndex,  // Unit
-		PlsSrs_sensorBase + ".6" + sensorIndex,  // Status
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			tmp_oid = akcpBaseOID
+			oids[0] = tmp_oid + sensorProbePlus.SensorNameBase + "." + sensorIndex
+			oids[1] = tmp_oid + sensorProbePlus.SensorTypeBase + "." + sensorIndex
+			oids[2] = tmp_oid + sensorProbePlus.SensorValueBase + "." + sensorIndex
+			oids[3] = tmp_oid + sensorProbePlus.SensorUnitBase + "." + sensorIndex
+			oids[4] = tmp_oid + sensorProbePlus.SensorStatusBase + "." + sensorIndex
+		}
+		default : {
+			return details, errors.New("Not yet implemented")
+		}
 	}
-	*/
+
+	//fmt.Println(oids)
 	query, err := params.Get(oids)
 	if err != nil {
 		return details, err
@@ -128,16 +116,25 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string) (SensorDetai
 	}
 	*/
 
+	// Name
 	details.Name = ValueToString(query.Variables[0])
+
+	// Sensor type
 	details.Sensortype, err = ValueToUint64(query.Variables[1])
 	if err != nil {
 		return details, err
 	}
+
+	// The sensor Value (as seen in the interface)
 	details.Value, err = ValueToUint64(query.Variables[2])
 	if err != nil {
 		return details, err
 	}
+
+	// The measuring unit (if any)
 	details.Unit = ValueToString(query.Variables[3])
+
+	// Sensor status (is the value inside the thresholds configured on the device
 	details.Status, err = ValueToUint64(query.Variables[4])
 	if err != nil {
 		return details, err

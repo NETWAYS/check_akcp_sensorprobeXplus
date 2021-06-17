@@ -22,7 +22,10 @@ type Config struct {
 	port			uint16
 	mode			string
 	device			string
+	device_type		int
 	sensorPort			string
+	excludeSensorType	[]string
+	excludeSensorType_int []uint32
 	// authProtocol		string
 	// authPassword 	string
 	// privProtocol		string
@@ -55,6 +58,9 @@ var modes = map[string] uint {
 	"temperatureSensors" : temperaturSensors,
 	"humiditySensors" : humiditySensors,
 }
+
+//var default_excluded_types []string
+
 
 func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	fs.StringVarP(&c.hostname, "host", "h", "", "Hostname or IP of the targeted device (required)")
@@ -132,6 +138,8 @@ func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	- door
 	- reader`)
 	fs.StringVarP(&c.sensorPort, "sensorPort", "", "", "Sensor Port (required for single mode)")
+	fs.StringArrayVarP(&c.excludeSensorType, "exclude", "e", nil, "Exclude specific sensor type, valid types are the same as are available for querying above, can be used multiple times (default \"buzzer\")")
+	//fs.StringSliceVarP(
 }
 
 func (c *Config) Validate() error {
@@ -160,6 +168,35 @@ func (c *Config) Validate() error {
 	} else {
 		return errors.New("Invalid SNMP version string")
 	}
+
+	switch c.device {
+		case "sensorProbe" : {
+			// TODO
+			return errors.New("Not yet implemented.")
+		}
+		case "securityProbe" : {
+			// TODO
+			return errors.New("Not yet implemented.")
+		}
+		case "sensorProbe+" : {
+			c.device_type = akcp.SensorProbePlus_type
+		}
+		default: {
+			return errors.New("Invalid device type.")
+		}
+	}
+
+	if len(c.excludeSensorType) == 0 {
+		c.excludeSensorType = append(c.excludeSensorType, "buzzer")
+	}
+
+	for _, tmp := range c.excludeSensorType {
+		val, err := akcp.GetSensorTypeInt(tmp, c.device_type)
+		if err != nil {
+			return err
+		}
+		c.excludeSensorType_int = append(c.excludeSensorType_int, val)
+	}
 	return nil
 }
 
@@ -183,20 +220,60 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 	if err != nil {
 		check.ExitError(err)
 	}
-	//fmt.Println("Connection succesful")
 	defer params.Conn.Close()
 
+
+	val , ok := modes[c.mode]
+	if !ok {
+		// not one of the main modes, look for specifics
+		if c.device_type == akcp.SensorProbePlus_type {
+			_, ok = sensorProbePlus.SensorsTypes[c.mode]
+			if !ok {
+				return errors.New("Mode is not a valid value")
+			}
+			return errors.New("Mode not yet implemented.")
+		} else {
+			// TODO
+			return errors.New("Device not yet implemented.")
+		}
+	} else {
+		if val == queryAllSensors {
+			err = queryAllSensorsMode(params, c, overall, c.device_type)
+			if err != nil {
+				check.ExitError(err)
+			}
+			return nil
+		} else {
+			// TODO
+			return errors.New("Not yet implemented.")
+		}
+	}
+
+}
+
+func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int) (err error) {
+
 	// Get all sensors
-	sensors, err := akcp.QuerySensorList(params)
+	sensors, err := akcp.QuerySensorList(params, device_type)
 	if err != nil {
 		check.ExitError(err)
 	}
 
 	for _, sensor := range sensors {
 		//fmt.Printf("%d: %s\n", num, sensor)
-		details, err := akcp.QuerySensorDetails(params, sensor)
+		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
 		if err != nil {
 			check.ExitError(err)
+		}
+
+		var exclude bool = false
+		for _, excluded_type := range c.excludeSensorType_int {
+			if uint64(excluded_type) == details.Sensortype {
+				exclude = true
+			}
+		}
+		if exclude {
+			continue
 		}
 		/*
 		fmt.Printf("Name: %s\n", details.name)
@@ -221,6 +298,5 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 			overall.AddUnknown(sensorString)
 		}
 	}
-
 	return nil
 }
