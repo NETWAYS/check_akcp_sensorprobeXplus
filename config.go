@@ -64,13 +64,14 @@ var modes = map[string] uint {
 
 func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	fs.StringVarP(&c.hostname, "host", "h", "", "Hostname or IP of the targeted device (required)")
-	fs.StringVarP(&c.snmp_version_param, "snmp_version", "", "2c", "Version of SNMP to use (1|2c, default: 2c)")
-	fs.StringVarP(&c.community, "community", "c", "public", "SNMP Community string (default: \"public\")")
-	fs.Uint16VarP(&c.port, "port", "p", 161, "SNMP Port (default: \"161\")")
+	fs.StringVarP(&c.snmp_version_param, "snmp_version", "", "2c", "Version of SNMP to use (1|2c)")
+	fs.StringVarP(&c.community, "community", "c", "public", "SNMP Community string")
+	fs.Uint16VarP(&c.port, "port", "p", 161, "SNMP Port")
 	fs.StringVarP(&c.device, "device", "", "sensorProbe+", `Device type, may be one of:
 	- sensorProbe
 	- securityProbe
-	- sensorProbe+`)
+	- sensorProbe+
+	`)
 	fs.StringVarP(&c.mode, "mode", "m", "queryAllSensors", `Usage mode (default: queryAllSensors)
 	Possible modes:
 	- queryAllSensors: Query all the sensors and show their value and state
@@ -136,10 +137,10 @@ func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	- power_meter
 	- access
 	- door
-	- reader`)
+	- reader
+	`)
 	fs.StringVarP(&c.sensorPort, "sensorPort", "", "", "Sensor Port (required for single mode)")
-	fs.StringArrayVarP(&c.excludeSensorType, "exclude", "e", nil, "Exclude specific sensor type, valid types are the same as are available for querying above, can be used multiple times (default \"buzzer\")")
-	//fs.StringSliceVarP(
+	fs.StringArrayVarP(&c.excludeSensorType, "exclude", "e", nil, "Exclude specific sensor type, valid types are the same as are available for querying above, can be used multiple times")
 }
 
 func (c *Config) Validate() error {
