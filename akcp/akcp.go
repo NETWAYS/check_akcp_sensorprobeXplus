@@ -113,6 +113,36 @@ func QueryTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []st
 	return sensors, nil
 }
 
+func QueryHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
+	// Fetches the IDs of all sensors
+	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
+
+	var oid string
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			oid = akcpBaseOID + sensorProbePlus.HumidityTable + ".1.1"
+		}
+		default : {
+			return nil, errors.New("Not yet implemented")
+		}
+	}
+	//fmt.Println(oid)
+	results, err := params.BulkWalkAll(oid)
+	if err != nil {
+		return nil, err
+	}
+	for _, variable := range results{
+		//printValue(variable)
+		sensors = append(sensors, ValueToString(variable))
+		//fmt.Println(variable.Name)
+	}
+
+	//fmt.Println(sensors)
+	return sensors, nil
+}
+
+
 func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
 	var tmp_oid string
