@@ -1,7 +1,5 @@
-github.com/NETWAYS/go-check v0.1.0 h1:71jwwcxNwWpLEtzr8FlysyqMwQXRKX+vhNsbNvVRxKI=
-github.com/NETWAYS/go-check v0.1.0/go.mod h1:1io7Dj72xdHEsa3ZU7oCbvUSi+QjTT/u863gfuvU3+s=
-github.com/NETWAYS/go-check v0.1.1-0.20210618092346-16b92389e57e h1:Ck6GVvLibIqL7khvga8lwQguhfbKP8Ize5H0F2g31iE=
-github.com/NETWAYS/go-check v0.1.1-0.20210618092346-16b92389e57e/go.mod h1:1io7Dj72xdHEsa3ZU7oCbvUSi+QjTT/u863gfuvU3+s=
+github.com/NETWAYS/go-check v0.2.1-0.20210618104846-e76df708028e h1:tu7sVxeqbuqKzlE8SBcgu3CO6FVTAtHycQIj/yUapQo=
+github.com/NETWAYS/go-check v0.2.1-0.20210618104846-e76df708028e/go.mod h1:1io7Dj72xdHEsa3ZU7oCbvUSi+QjTT/u863gfuvU3+s=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -29,6 +27,7 @@ golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 h1:YyJpGZS1sBuBCzLAR1VEpK193
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/tools v0.0.0-20190425150028-36563e24a262/go.mod h1:RgjU9mgBXZiqYHBnxXauZ1Gv1EHHAz9KjViQ78xBX0Q=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
