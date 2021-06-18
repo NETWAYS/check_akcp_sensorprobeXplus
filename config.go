@@ -187,16 +187,17 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	if len(c.excludeSensorType) == 0 {
-		c.excludeSensorType = append(c.excludeSensorType, "buzzer")
-	}
-
-	for _, tmp := range c.excludeSensorType {
-		val, err := akcp.GetSensorTypeInt(tmp, c.device_type)
-		if err != nil {
-			return err
+	if c.excludeSensorType[0] != "" && len(c.excludeSensorType) == 1 {
+		if c.excludeSensorType == nil {
+			c.excludeSensorType = append(c.excludeSensorType, "buzzer")
 		}
-		c.excludeSensorType_int = append(c.excludeSensorType_int, val)
+		for _, tmp := range c.excludeSensorType {
+			val, err := akcp.GetSensorTypeInt(tmp, c.device_type)
+			if err != nil {
+				return err
+			}
+			c.excludeSensorType_int = append(c.excludeSensorType_int, val)
+		}
 	}
 	return nil
 }
