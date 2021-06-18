@@ -3,12 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/NETWAYS/go-check"
-	"github.com/NETWAYS/go-check/result"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
+	"github.com/NETWAYS/go-check"
+	"github.com/NETWAYS/go-check/perfdata"
+	"github.com/NETWAYS/go-check/result"
 	"github.com/gosnmp/gosnmp"
 	"github.com/spf13/pflag"
 )
@@ -317,6 +319,18 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 		sensorString += sensor.Unit
 	}
 
+	//fmt.Println(sensor)
+	var pf perfdata.Perfdata
+	pf.Label = sensor.Name
+	pf.Value = sensor.Value
+
+	unit := strings.ToLower(sensor.Unit)
+	if perfdata.IsValidUom(unit) {
+		pf.Uom = unit
+	}
+
+	sensorString += " | " + pf.String()
+
 	if sensor.Status == 2 {
 		overall.AddOK(sensorString)
 	} else if sensor.Status == 3 || sensor.Status == 5 {
@@ -328,6 +342,7 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 	} else {
 		overall.AddUnknown(sensorString)
 	}
+
 
 	return nil
 }
