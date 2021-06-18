@@ -187,11 +187,14 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	if c.excludeSensorType[0] != "" && len(c.excludeSensorType) == 1 {
-		if c.excludeSensorType == nil {
-			c.excludeSensorType = append(c.excludeSensorType, "buzzer")
-		}
+	if c.excludeSensorType == nil {
+		c.excludeSensorType = append(c.excludeSensorType, "buzzer")
+	}
+	if c.excludeSensorType[0] != ""  {
 		for _, tmp := range c.excludeSensorType {
+			if tmp == "" {
+				continue
+			}
 			val, err := akcp.GetSensorTypeInt(tmp, c.device_type)
 			if err != nil {
 				return err
