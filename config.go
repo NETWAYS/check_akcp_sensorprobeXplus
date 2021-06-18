@@ -76,7 +76,7 @@ func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	Possible modes:
 	- queryAllSensors: Query all the sensors and show their value and state
 	- single: Query a single sensor (sensorPort must be set)
-	- temperaturSensors: Query all the temperature sensors
+	- temperatureSensors: Query all the temperature sensors
 	- humiditySensors: Query all the humidity sensors
 
 	The following modes will query the respective sensor types:
@@ -244,6 +244,12 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 				check.ExitError(err)
 			}
 			return nil
+		} else if val == temperaturSensors {
+			err = queryTemperatureSensors(params, c, overall, c.device_type)
+			if err != nil {
+				check.ExitError(err)
+			}
+			return nil
 		} else {
 			// TODO
 			return errors.New("Not yet implemented.")
@@ -283,6 +289,39 @@ func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Over
 		fmt.Printf("Unit: %s\n", details.unit)
 		fmt.Printf("Status: %d\n", details.status)
 		*/
+
+		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
+		if details.Unit == "%" {
+			sensorString += "%%"
+		}
+		//fmt.Println(sensorString)
+		if details.Status == 2 {
+			overall.AddOK(sensorString)
+		} else if details.Status == 3 || details.Status == 5 {
+			overall.AddWarning(sensorString)
+		} else if details.Status == 6 || details.Status == 4 {
+			overall.AddCritical(sensorString)
+		} else {
+			overall.AddUnknown(sensorString)
+		}
+	}
+	return nil
+}
+
+func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int) (err error) {
+
+	// Get all sensors
+	sensors, err := akcp.QueryTemperatureTable(params, device_type)
+	if err != nil {
+		check.ExitError(err)
+	}
+
+	for _, sensor := range sensors {
+		//fmt.Printf("%d: %s\n", num, sensor)
+		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
+		if err != nil {
+			check.ExitError(err)
+		}
 
 		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
 		if details.Unit == "%" {

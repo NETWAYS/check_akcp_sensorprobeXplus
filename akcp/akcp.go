@@ -84,6 +84,35 @@ func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, 
 	return sensors, nil
 }
 
+func QueryTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
+	// Fetches the IDs of all sensors
+	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
+
+	var oid string
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			oid = akcpBaseOID + sensorProbePlus.TemeratureTable + ".1.1"
+		}
+		default : {
+			return nil, errors.New("Not yet implemented")
+		}
+	}
+	//fmt.Println(oid)
+	results, err := params.BulkWalkAll(oid)
+	if err != nil {
+		return nil, err
+	}
+	for _, variable := range results{
+		//printValue(variable)
+		sensors = append(sensors, ValueToString(variable))
+		//fmt.Println(variable.Name)
+	}
+
+	//fmt.Println(sensors)
+	return sensors, nil
+}
+
 func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
 	var tmp_oid string
@@ -123,7 +152,7 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 	details.Sensortype, err = ValueToUint64(query.Variables[1])
 	if err != nil {
 		return details, err
-	}
+}
 
 	// The sensor Value (as seen in the interface)
 	details.Value, err = ValueToUint64(query.Variables[2])
