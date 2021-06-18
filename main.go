@@ -49,5 +49,5 @@ func main () {
 	}
 	*/
 
-	check.Exit(overall.GetStatus(), overall.GetOutput())
+	check.ExitRaw(overall.GetStatus(), overall.GetOutput())
 }

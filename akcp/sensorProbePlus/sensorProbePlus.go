@@ -65,7 +65,7 @@ const (
 	door = 138
 	reader = 139
 )
-type SensorType uint32
+type SensorType uint64
 
 var SensorsTypes = map[string]SensorType {
 	"temperature" : temperature,

@@ -34,7 +34,7 @@ type Config struct {
 
 // Modes
 const (
-	queryAllSensors uint = iota
+	queryAllSensors uint64 = iota
 	listPossibleSensors
 	single
 	temperaturSensors
@@ -52,7 +52,7 @@ const (
 	towerLED
 )
 
-var modes = map[string] uint {
+var modes = map[string] uint64 {
 	"queryAllSensors" : queryAllSensors,
 	"single" :	single,
 	"temperatureSensors" : temperaturSensors,
@@ -228,11 +228,17 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 	if !ok {
 		// not one of the main modes, look for specifics
 		if c.device_type == akcp.SensorProbePlus_type {
-			_, ok = sensorProbePlus.SensorsTypes[c.mode]
+			val, ok := sensorProbePlus.SensorsTypes[c.mode]
 			if !ok {
 				return errors.New("Mode is not a valid value")
+			} else {
+				err = querySensorByType(params, c, overall, c.device_type, uint64(val))
+				if err != nil {
+					check.ExitError(err)
+				}
+				return nil
 			}
-			return errors.New("Mode not yet implemented.")
+			//return errors.New("Mode not yet implemented.")
 		} else {
 			// TODO
 			return errors.New("Device not yet implemented.")
@@ -296,19 +302,56 @@ func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Over
 		fmt.Printf("Status: %d\n", details.status)
 		*/
 
-		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
-		if details.Unit == "%" {
-			sensorString += "%%"
+		mapSensorStatus(details, overall)
+	}
+	return nil
+}
+
+func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error) {
+	sensorString := fmt.Sprintf("%s: %d", sensor.Name, sensor.Value)
+	if sensor.Unit != "" {
+		sensorString += sensor.Unit
+	}
+
+	if sensor.Status == 2 {
+		overall.AddOK(sensorString)
+	} else if sensor.Status == 3 || sensor.Status == 5 {
+		overall.AddWarning(sensorString)
+	} else if sensor.Status == 6 || sensor.Status == 4 {
+		overall.AddCritical(sensorString)
+	} else if sensor.Status == 7 {
+		overall.AddCritical(sensor.Name + " ERROR!")
+	} else {
+		overall.AddUnknown(sensorString)
+	}
+
+	return nil
+}
+
+func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int, sensor_type uint64) (err error) {
+	// Get all sensors
+	sensors, err := akcp.QuerySensorList(params, device_type)
+	if err != nil {
+		check.ExitError(err)
+	}
+
+	for _, sensor := range sensors {
+		//fmt.Printf("%d: %s\n", num, sensor)
+		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
+		if err != nil {
+			check.ExitError(err)
 		}
-		//fmt.Println(sensorString)
-		if details.Status == 2 {
-			overall.AddOK(sensorString)
-		} else if details.Status == 3 || details.Status == 5 {
-			overall.AddWarning(sensorString)
-		} else if details.Status == 6 || details.Status == 4 {
-			overall.AddCritical(sensorString)
-		} else {
-			overall.AddUnknown(sensorString)
+
+		/*
+		fmt.Printf("Name: %s\n", details.name)
+		fmt.Printf("Sensor Type: %d\n", details.sensortype)
+		fmt.Printf("Sensor Value: %d\n", details.value)
+		fmt.Printf("Unit: %s\n", details.unit)
+		fmt.Printf("Status: %d\n", details.status)
+		*/
+
+		if details.Sensortype == uint64(sensor_type) {
+			mapSensorStatus(details, overall)
 		}
 	}
 	return nil
@@ -328,21 +371,8 @@ func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.O
 		if err != nil {
 			check.ExitError(err)
 		}
+		mapSensorStatus(details, overall)
 
-		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
-		if details.Unit == "%" {
-			sensorString += "%%"
-		}
-		//fmt.Println(sensorString)
-		if details.Status == 2 {
-			overall.AddOK(sensorString)
-		} else if details.Status == 3 || details.Status == 5 {
-			overall.AddWarning(sensorString)
-		} else if details.Status == 6 || details.Status == 4 {
-			overall.AddCritical(sensorString)
-		} else {
-			overall.AddUnknown(sensorString)
-		}
 	}
 	return nil
 }
@@ -361,21 +391,7 @@ func queryHumiditySensors(params *gosnmp.GoSNMP, c *Config, overall *result.Over
 		if err != nil {
 			check.ExitError(err)
 		}
-
-		sensorString := fmt.Sprintf("%s: %d", details.Name, details.Value)
-		if details.Unit == "%" {
-			sensorString += "%%"
-		}
-		//fmt.Println(sensorString)
-		if details.Status == 2 {
-			overall.AddOK(sensorString)
-		} else if details.Status == 3 || details.Status == 5 {
-			overall.AddWarning(sensorString)
-		} else if details.Status == 6 || details.Status == 4 {
-			overall.AddCritical(sensorString)
-		} else {
-			overall.AddUnknown(sensorString)
-		}
+		mapSensorStatus(details, overall)
 	}
 	return nil
 }

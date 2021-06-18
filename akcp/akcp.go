@@ -69,19 +69,8 @@ func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, 
 			return nil, errors.New("Not yet implemented")
 		}
 	}
-	//fmt.Println(oid)
-	results, err := params.BulkWalkAll(oid)
-	if err != nil {
-		return nil, err
-	}
-	for _, variable := range results{
-		//printValue(variable)
-		sensors = append(sensors, ValueToString(variable))
-		//fmt.Println(variable.Name)
-	}
-
-	//fmt.Println(sensors)
-	return sensors, nil
+	sensors, err = GetSensorsIDsFromTable(params, oid)
+	return sensors, err
 }
 
 func QueryTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
@@ -98,8 +87,12 @@ func QueryTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []st
 			return nil, errors.New("Not yet implemented")
 		}
 	}
-	//fmt.Println(oid)
-	results, err := params.BulkWalkAll(oid)
+	sensors, err = GetSensorsIDsFromTable(params, oid)
+	return sensors, err
+}
+
+func GetSensorsIDsFromTable(params *gosnmp.GoSNMP, tableOID string) (sensors[]string, err error) {
+	results, err := params.BulkWalkAll(tableOID)
 	if err != nil {
 		return nil, err
 	}
@@ -127,19 +120,9 @@ func QueryHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []strin
 			return nil, errors.New("Not yet implemented")
 		}
 	}
-	//fmt.Println(oid)
-	results, err := params.BulkWalkAll(oid)
-	if err != nil {
-		return nil, err
-	}
-	for _, variable := range results{
-		//printValue(variable)
-		sensors = append(sensors, ValueToString(variable))
-		//fmt.Println(variable.Name)
-	}
 
-	//fmt.Println(sensors)
-	return sensors, nil
+	sensors, err = GetSensorsIDsFromTable(params, oid)
+	return sensors, err
 }
 
 
