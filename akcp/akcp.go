@@ -191,7 +191,7 @@ func ValueToString(pdu gosnmp.SnmpPDU) string {
 		return string(pdu.Value.([]byte))
 	default:
 		//fmt.Printf("TYPE %d: %d\n", pdu.Type, gosnmp.ToBigInt(pdu.Value))
-		return fmt.Sprint("%d", gosnmp.ToBigInt(pdu.Value))
+		return fmt.Sprintf("%d", gosnmp.ToBigInt(pdu.Value))
 	}
 }
 
