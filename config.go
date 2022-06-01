@@ -319,7 +319,6 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 		sensorString += sensor.Unit
 	}
 
-	//fmt.Println(sensor)
 	var pf perfdata.Perfdata
 	pf.Label = sensor.Name
 	pf.Value = sensor.Value
