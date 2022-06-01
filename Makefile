@@ -18,3 +18,4 @@ clean:
 build:
 	mkdir -p $(BUILD_DIR)
 	GOOS=linux GOARCH=amd64 $(BUILD) -o $(BUILD_DIR)/$(BINARY_BASE_NAME).amd64
+	GOOS=windows GOARCH=amd64 $(BUILD) -o $(BUILD_DIR)/$(BINARY_BASE_NAME).amd64
