@@ -113,9 +113,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 	counter := 0
 	for _, row := range *foo {
 		// Every row is a temperature sensor
-		//fmt.Printf("%#v:\n", row)
 		for _, cell := range row {
-			//fmt.Printf("%#v\n", cell)
 			if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureDescription + ".") {
 				sensors[counter].Name = ValueToString(cell.Pdu)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureType + ".") {

@@ -1,5 +1,7 @@
 github.com/NETWAYS/go-check v0.3.0 h1:WiLa/POqkI7TWbNxpUNkQ8gd9G0RTCc4DKUvmpy34Hg=
 github.com/NETWAYS/go-check v0.3.0/go.mod h1:PO4R+lr+mcdjltcvvJRPnyGbRqMZHlIRDTVIzOnE0HA=
+github.com/NETWAYS/go-check v0.3.1-0.20220407112245-88e3f559af25 h1:qW4RoPyPj8y065/2IVCG5yOG1CgmDDO3+c/Z6LqLOd8=
+github.com/NETWAYS/go-check v0.3.1-0.20220407112245-88e3f559af25/go.mod h1:nkmjC05Fa2f5793chH2LgC8zra90GOnJ7k7zrpBsQzc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

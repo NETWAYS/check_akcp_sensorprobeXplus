@@ -286,7 +286,6 @@ func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overa
 	}
 
 	for _, sensor := range sensors {
-		//fmt.Printf("%d: %s\n", num, sensor)
 		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
 		if err != nil {
 			check.ExitError(err)
@@ -357,9 +356,10 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 		pf.Crit = &tmp
 	}
 
-	unit := strings.ToLower(sensor.Unit)
-	if perfdata.IsValidUom(unit) {
-		pf.Uom = unit
+	if sensor.Unit != "C" {
+		pf.Uom = strings.ToLower(sensor.Unit)
+	} else {
+		pf.Uom = "C"
 	}
 
 	sensorString += " | " + pf.String()
@@ -387,19 +387,10 @@ func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall
 	}
 
 	for _, sensor := range sensors {
-		//fmt.Printf("%d: %s\n", num, sensor)
 		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
 		if err != nil {
 			check.ExitError(err)
 		}
-
-		/*
-			fmt.Printf("Name: %s\n", details.name)
-			fmt.Printf("Sensor Type: %d\n", details.sensortype)
-			fmt.Printf("Sensor Value: %d\n", details.value)
-			fmt.Printf("Unit: %s\n", details.unit)
-			fmt.Printf("Status: %d\n", details.status)
-		*/
 
 		if details.SensorType == uint64(sensor_type) {
 			mapSensorStatus(details, overall)
@@ -420,7 +411,6 @@ func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.O
 	*/
 
 	for _, details := range sensors {
-		//fmt.Printf("%d: %s\n", num, sensor)
 		mapSensorStatus(details, overall)
 
 	}
@@ -436,7 +426,6 @@ func queryHumiditySensors(params *gosnmp.GoSNMP, c *Config, overall *result.Over
 	}
 
 	for _, sensor := range sensors {
-		//fmt.Printf("%d: %s\n", num, sensor)
 		mapSensorStatus(sensor, overall)
 	}
 	return nil
