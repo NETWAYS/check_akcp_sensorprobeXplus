@@ -16,3 +16,5 @@
 
 # Build directory, because it is annoying
 build
+
+check_akcp_sensorprobeXplus
