@@ -1,12 +1,14 @@
 package akcp
 
 import (
-	"github.com/gosnmp/gosnmp"
-	"fmt"
 	"errors"
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
-)
+	"fmt"
+	"strings"
 
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/utils"
+	"github.com/gosnmp/gosnmp"
+)
 
 // Sensor statuses from the AKCP MIB (probably do not apply to all sensors)
 // noStatus = 1,normal = 2,highWarning = 3,highCritical = 4,lowWarning = 5,lowCritical = 6,sensorError = 7,
@@ -22,22 +24,32 @@ const (
 
 type SensorType uint64
 
+type MayUint64 struct {
+	Present bool
+	Val 	uint64
+}
+
 
 type SensorDetails struct {
-	Sensortype	uint64
+	SensorType	uint64
 	Name		string
 	Value		uint64
 	Unit		string
 	Status		uint64
+	Acknowledged bool
+	LowWarning 	MayUint64
+	HighWarning	MayUint64
+	LowCritical 	MayUint64
+	HighCritical	MayUint64
 }
 
 
 const akcpBaseOID = ".1.3.6.1.4.1.3854"
 
 const (
-	SensorProbe_type = iota
-	SecurityProbe_type
-	SensorProbePlus_type
+	SensorProbe_type = 1
+	SecurityProbe_type = 2
+	SensorProbePlus_type = 3
 )
 
 func GetSensorTypeInt (type_string string, device_type int) (uint32, error) {
@@ -73,15 +85,113 @@ func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, 
 	return sensors, err
 }
 
-func QueryTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all sensors
-	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
+func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, error) {
+	var oid string
+	var sensors []SensorDetails
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			oid = akcpBaseOID + sensorProbePlus.TemperatureTable
+		}
+		default : {
+			return nil, errors.New("Not yet implemented")
+		}
+	}
+
+	tempTable, err := snmp.BulkWalkAll(oid)
+	if err != nil {
+		return sensors, err
+	}
+
+	foo, err := utils.ParseSnmpTable(&tempTable, 12)
+	if err != nil {
+		return sensors, err
+	}
+
+	sensors = make([]SensorDetails, len(*foo))
+
+	counter := 0
+	for _, row := range *foo {
+		// Every row is a temperature sensor
+		//fmt.Printf("%#v:\n", row)
+		for _, cell := range row {
+			//fmt.Printf("%#v\n", cell)
+			if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureDescription + ".") {
+				sensors[counter].Name = ValueToString(cell.Pdu)
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureType + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].SensorType = tmp
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureDegree + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].Value = tmp
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureUnit + ".") {
+				sensors[counter].Unit = ValueToString(cell.Pdu)
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureLowWarning + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].LowWarning.Val = tmp
+				sensors[counter].LowWarning.Present =  true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighWarning + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].HighWarning.Val = tmp
+				sensors[counter].HighWarning.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureLowCritical + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].LowCritical.Val = tmp
+				sensors[counter].LowCritical.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighCritical + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].HighCritical.Val = tmp
+				sensors[counter].HighCritical.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureAcknowledge + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				if tmp == 1 {
+					sensors[counter].Acknowledged = true
+				} else {
+					sensors[counter].Acknowledged = false
+				}
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureStatus + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].Status = tmp
+			}
+		}
+		counter ++
+	}
+
+	return sensors, nil
+}
+
+func GetIDsFromTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
+	// Fetches the IDs of all temperature sensosr in the temperature table
 
 	var oid string
 
 	switch device_type {
 		case SensorProbePlus_type: {
-			oid = akcpBaseOID + sensorProbePlus.TemeratureTable + ".1.1"
+			oid = akcpBaseOID + sensorProbePlus.TemperatureTable + ".1.1"
 		}
 		default : {
 			return nil, errors.New("Not yet implemented")
@@ -162,7 +272,7 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 	details.Name = ValueToString(query.Variables[0])
 
 	// Sensor type
-	details.Sensortype, err = ValueToUint64(query.Variables[1])
+	details.SensorType, err = ValueToUint64(query.Variables[1])
 	if err != nil {
 		return details, err
 }

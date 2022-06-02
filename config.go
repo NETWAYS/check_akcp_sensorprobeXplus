@@ -293,23 +293,30 @@ func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Over
 
 		var exclude bool = false
 		for _, excluded_type := range c.excludeSensorType_int {
-			if uint64(excluded_type) == details.Sensortype {
+			if uint64(excluded_type) == details.SensorType {
 				exclude = true
 			}
 		}
 		if exclude {
 			continue
 		}
-		/*
-		fmt.Printf("Name: %s\n", details.name)
-		fmt.Printf("Sensor Type: %d\n", details.sensortype)
-		fmt.Printf("Sensor Value: %d\n", details.value)
-		fmt.Printf("Unit: %s\n", details.unit)
-		fmt.Printf("Status: %d\n", details.status)
-		*/
+
+		if (details.SensorType  == sensorProbePlus.Temperature ||
+			details.SensorType == sensorProbePlus.Temperature_dual) {
+				tempSensors, err := akcp.QueryTemperatureTable(params, device_type)
+				if err != nil {
+					return err
+				}
+				for _, tempSensor := range tempSensors {
+					if details.Name == tempSensor.Name {
+						details = tempSensor
+					}
+				}
+			}
 
 		mapSensorStatus(details, overall)
 	}
+
 	return nil
 }
 
@@ -322,6 +329,21 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 	var pf perfdata.Perfdata
 	pf.Label = sensor.Name
 	pf.Value = sensor.Value
+
+	if sensor.HighWarning.Present && sensor.LowWarning.Present {
+		tmp := check.Threshold{}
+		tmp.Inside = false
+		tmp.Lower = float64(sensor.LowWarning.Val)
+		tmp.Upper  = float64(sensor.HighWarning.Val)
+		pf.Warn = &tmp
+	}
+	if sensor.HighCritical.Present && sensor.LowCritical.Present {
+		tmp := check.Threshold{}
+		tmp.Inside = false
+		tmp.Lower = float64(sensor.LowCritical.Val)
+		tmp.Upper  = float64(sensor.HighCritical.Val)
+		pf.Crit = &tmp
+	}
 
 	unit := strings.ToLower(sensor.Unit)
 	if perfdata.IsValidUom(unit) {
@@ -368,7 +390,7 @@ func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall
 		fmt.Printf("Status: %d\n", details.status)
 		*/
 
-		if details.Sensortype == uint64(sensor_type) {
+		if details.SensorType == uint64(sensor_type) {
 			mapSensorStatus(details, overall)
 		}
 	}
@@ -379,16 +401,15 @@ func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.O
 
 	// Get all sensors
 	sensors, err := akcp.QueryTemperatureTable(params, device_type)
+	/*
+	sensors, err := akcp.GetIDsFromTemperatureTable(params, device_type)
 	if err != nil {
 		check.ExitError(err)
 	}
+	*/
 
-	for _, sensor := range sensors {
+	for _, details:= range sensors {
 		//fmt.Printf("%d: %s\n", num, sensor)
-		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
-		if err != nil {
-			check.ExitError(err)
-		}
 		mapSensorStatus(details, overall)
 
 	}
