@@ -185,7 +185,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 }
 
 func GetIDsFromTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all temperature sensosr in the temperature table
+	// Fetches the IDs of all temperature sensors in the temperature table
 
 	var oid string
 
@@ -216,7 +216,7 @@ func GetSensorsIDsFromTable(params *gosnmp.GoSNMP, tableOID string) (sensors[]st
 	return sensors, nil
 }
 
-func QueryHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
+func GetIDsFromHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
 	// Fetches the IDs of all sensors
 	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
 
@@ -233,6 +233,105 @@ func QueryHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []strin
 
 	sensors, err = GetSensorsIDsFromTable(params, oid)
 	return sensors, err
+}
+
+func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, error) {
+	var oid string
+	var sensors []SensorDetails
+
+	switch device_type {
+		case SensorProbePlus_type: {
+			oid = akcpBaseOID + sensorProbePlus.HumidityTable
+		}
+		default : {
+			return nil, errors.New("Not yet implemented")
+		}
+	}
+
+	tempTable, err := snmp.BulkWalkAll(oid)
+	if err != nil {
+		return sensors, err
+	}
+
+	foo, err := utils.ParseSnmpTable(&tempTable, 12)
+	if err != nil {
+		return sensors, err
+	}
+
+	sensors = make([]SensorDetails, len(*foo))
+
+	counter := 0
+	for _, row := range *foo {
+		// Every row is a temperature sensor
+		//fmt.Printf("%#v:\n", row)
+		for _, cell := range row {
+			//fmt.Printf("%#v\n", cell)
+			if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityDescription + ".") {
+				sensors[counter].Name = ValueToString(cell.Pdu)
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityType + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].SensorType = tmp
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityPercent+ ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].Value = tmp
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityUnit + ".") {
+				sensors[counter].Unit = ValueToString(cell.Pdu)
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityLowWarning + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].LowWarning.Val = tmp
+				sensors[counter].LowWarning.Present =  true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityHighWarning + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].HighWarning.Val = tmp
+				sensors[counter].HighWarning.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityLowCritical + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].LowCritical.Val = tmp
+				sensors[counter].LowCritical.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityHighCritical + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].HighCritical.Val = tmp
+				sensors[counter].HighCritical.Present = true
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityAcknowledge + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				if tmp == 1 {
+					sensors[counter].Acknowledged = true
+				} else {
+					sensors[counter].Acknowledged = false
+				}
+			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityStatus + ".") {
+				tmp, err := ValueToUint64(cell.Pdu)
+				if err != nil {
+					return sensors, err
+				}
+				sensors[counter].Status = tmp
+			}
+		}
+		counter ++
+	}
+
+	return sensors, nil
 }
 
 

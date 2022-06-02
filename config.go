@@ -15,18 +15,17 @@ import (
 	"github.com/spf13/pflag"
 )
 
-
 type Config struct {
-	hostname		string
-	snmp_version_param string
-	snmp_version	gosnmp.SnmpVersion
-	community		string
-	port			uint16
-	mode			string
-	device			string
-	device_type		int
-	sensorPort			string
-	excludeSensorType	[]string
+	hostname              string
+	snmp_version_param    string
+	snmp_version          gosnmp.SnmpVersion
+	community             string
+	port                  uint16
+	mode                  string
+	device                string
+	device_type           int
+	sensorPort            string
+	excludeSensorType     []string
 	excludeSensorType_int []uint32
 	// authProtocol		string
 	// authPassword 	string
@@ -54,15 +53,14 @@ const (
 	towerLED
 )
 
-var modes = map[string] uint64 {
-	"queryAllSensors" : queryAllSensors,
-	"single" :	single,
-	"temperatureSensors" : temperaturSensors,
-	"humiditySensors" : humiditySensors,
+var modes = map[string]uint64{
+	"queryAllSensors":    queryAllSensors,
+	"single":             single,
+	"temperatureSensors": temperaturSensors,
+	"humiditySensors":    humiditySensors,
 }
 
 //var default_excluded_types []string
-
 
 func (c *Config) BindArguments(fs *pflag.FlagSet) {
 	fs.StringVarP(&c.hostname, "host", "h", "", "Hostname or IP of the targeted device (required)")
@@ -147,7 +145,7 @@ func (c *Config) BindArguments(fs *pflag.FlagSet) {
 
 func (c *Config) Validate() error {
 
-	val , ok := modes[c.mode]
+	val, ok := modes[c.mode]
 	if !ok {
 		if c.device == "sensorProbePlus" {
 			_, ok = sensorProbePlus.SensorsTypes[c.mode]
@@ -157,7 +155,7 @@ func (c *Config) Validate() error {
 		}
 	} else {
 		if val == single && c.sensorPort == "" {
-				return errors.New("No sensorPort was given")
+			return errors.New("No sensorPort was given")
 		}
 	}
 
@@ -173,18 +171,22 @@ func (c *Config) Validate() error {
 	}
 
 	switch c.device {
-		case "sensorProbe" : {
+	case "sensorProbe":
+		{
 			// TODO
 			return errors.New("Not yet implemented.")
 		}
-		case "securityProbe" : {
+	case "securityProbe":
+		{
 			// TODO
 			return errors.New("Not yet implemented.")
 		}
-		case "sensorProbe+" : {
+	case "sensorProbe+":
+		{
 			c.device_type = akcp.SensorProbePlus_type
 		}
-		default: {
+	default:
+		{
 			return errors.New("Invalid device type.")
 		}
 	}
@@ -192,7 +194,7 @@ func (c *Config) Validate() error {
 	if c.excludeSensorType == nil {
 		c.excludeSensorType = append(c.excludeSensorType, "buzzer")
 	}
-	if c.excludeSensorType[0] != ""  {
+	if c.excludeSensorType[0] != "" {
 		for _, tmp := range c.excludeSensorType {
 			if tmp == "" {
 				continue
@@ -207,7 +209,7 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func (c *Config) Run(overall *result.Overall ) (err error) {
+func (c *Config) Run(overall *result.Overall) (err error) {
 
 	timeout, err := time.ParseDuration("30s")
 	if err != nil {
@@ -215,12 +217,12 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 	}
 
 	params := &gosnmp.GoSNMP{
-		Target:		c.hostname,
-		Port:		c.port,
-		Community:	c.community,
-		Version:	c.snmp_version,
-		Timeout:	timeout,
-		Retries:	3,
+		Target:    c.hostname,
+		Port:      c.port,
+		Community: c.community,
+		Version:   c.snmp_version,
+		Timeout:   timeout,
+		Retries:   3,
 	}
 
 	err = params.Connect()
@@ -229,8 +231,7 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 	}
 	defer params.Conn.Close()
 
-
-	val , ok := modes[c.mode]
+	val, ok := modes[c.mode]
 	if !ok {
 		// not one of the main modes, look for specifics
 		if c.device_type == akcp.SensorProbePlus_type {
@@ -276,7 +277,7 @@ func (c *Config) Run(overall *result.Overall ) (err error) {
 
 }
 
-func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int) (err error) {
+func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int) (err error) {
 
 	// Get all sensors
 	sensors, err := akcp.QuerySensorList(params, device_type)
@@ -301,18 +302,29 @@ func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Over
 			continue
 		}
 
-		if (details.SensorType  == sensorProbePlus.Temperature ||
-			details.SensorType == sensorProbePlus.Temperature_dual) {
-				tempSensors, err := akcp.QueryTemperatureTable(params, device_type)
-				if err != nil {
-					return err
-				}
-				for _, tempSensor := range tempSensors {
-					if details.Name == tempSensor.Name {
-						details = tempSensor
-					}
+		if details.SensorType == sensorProbePlus.Temperature ||
+			details.SensorType == sensorProbePlus.Temperature_dual {
+			tempSensors, err := akcp.QueryTemperatureTable(params, device_type)
+			if err != nil {
+				return err
+			}
+			for _, tempSensor := range tempSensors {
+				if details.Name == tempSensor.Name {
+					details = tempSensor
 				}
 			}
+		}
+		if details.SensorType == sensorProbePlus.Humidity_dual {
+			humiSensors, err := akcp.QueryHumidityTable(params, device_type)
+			if err != nil {
+				return err
+			}
+			for _, humSensor := range humiSensors {
+				if details.Name == humSensor.Name {
+					details = humSensor
+				}
+			}
+		}
 
 		mapSensorStatus(details, overall)
 	}
@@ -320,7 +332,7 @@ func queryAllSensorsMode (params *gosnmp.GoSNMP, c *Config, overall *result.Over
 	return nil
 }
 
-func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error) {
+func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	sensorString := fmt.Sprintf("%s: %d", sensor.Name, sensor.Value)
 	if sensor.Unit != "" {
 		sensorString += sensor.Unit
@@ -334,14 +346,14 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 		tmp := check.Threshold{}
 		tmp.Inside = false
 		tmp.Lower = float64(sensor.LowWarning.Val)
-		tmp.Upper  = float64(sensor.HighWarning.Val)
+		tmp.Upper = float64(sensor.HighWarning.Val)
 		pf.Warn = &tmp
 	}
 	if sensor.HighCritical.Present && sensor.LowCritical.Present {
 		tmp := check.Threshold{}
 		tmp.Inside = false
 		tmp.Lower = float64(sensor.LowCritical.Val)
-		tmp.Upper  = float64(sensor.HighCritical.Val)
+		tmp.Upper = float64(sensor.HighCritical.Val)
 		pf.Crit = &tmp
 	}
 
@@ -364,7 +376,6 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) (error)
 		overall.AddUnknown(sensorString)
 	}
 
-
 	return nil
 }
 
@@ -383,11 +394,11 @@ func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall
 		}
 
 		/*
-		fmt.Printf("Name: %s\n", details.name)
-		fmt.Printf("Sensor Type: %d\n", details.sensortype)
-		fmt.Printf("Sensor Value: %d\n", details.value)
-		fmt.Printf("Unit: %s\n", details.unit)
-		fmt.Printf("Status: %d\n", details.status)
+			fmt.Printf("Name: %s\n", details.name)
+			fmt.Printf("Sensor Type: %d\n", details.sensortype)
+			fmt.Printf("Sensor Value: %d\n", details.value)
+			fmt.Printf("Unit: %s\n", details.unit)
+			fmt.Printf("Status: %d\n", details.status)
 		*/
 
 		if details.SensorType == uint64(sensor_type) {
@@ -402,13 +413,13 @@ func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.O
 	// Get all sensors
 	sensors, err := akcp.QueryTemperatureTable(params, device_type)
 	/*
-	sensors, err := akcp.GetIDsFromTemperatureTable(params, device_type)
-	if err != nil {
-		check.ExitError(err)
-	}
+		sensors, err := akcp.GetIDsFromTemperatureTable(params, device_type)
+		if err != nil {
+			check.ExitError(err)
+		}
 	*/
 
-	for _, details:= range sensors {
+	for _, details := range sensors {
 		//fmt.Printf("%d: %s\n", num, sensor)
 		mapSensorStatus(details, overall)
 
@@ -426,11 +437,7 @@ func queryHumiditySensors(params *gosnmp.GoSNMP, c *Config, overall *result.Over
 
 	for _, sensor := range sensors {
 		//fmt.Printf("%d: %s\n", num, sensor)
-		details, err := akcp.QuerySensorDetails(params, sensor, device_type)
-		if err != nil {
-			check.ExitError(err)
-		}
-		mapSensorStatus(details, overall)
+		mapSensorStatus(sensor, overall)
 	}
 	return nil
 }
