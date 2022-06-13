@@ -1,13 +1,15 @@
 package akcp
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 
-	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/utils"
+	"github.com/NETWAYS/go-check"
 	"github.com/gosnmp/gosnmp"
 )
 
@@ -36,7 +38,7 @@ type MayThreshold struct {
 type SensorDetails struct {
 	SensorType	uint64
 	Name		string
-	Value		uint64
+	Value		float64
 	Unit		string
 	Status		snsrStts
 	Acknowledged bool
@@ -128,7 +130,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].Value = tmp
+				sensors[counter].Value = float64(tmp)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureUnit + ".") {
 				sensors[counter].Unit = ValueToString(cell.Pdu)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureLowWarning + ".") {
@@ -282,7 +284,7 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].Value = tmp
+				sensors[counter].Value = float64(tmp)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityUnit + ".") {
 				sensors[counter].Unit = ValueToString(cell.Pdu)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityLowWarning + ".") {
@@ -341,7 +343,7 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
 	var tmp_oid string
-	var oids = make([]string, 7, 7)
+	var oids = make([]string, 8, 8)
 
 	switch device_type {
 		case SensorProbePlus_type: {
@@ -355,6 +357,7 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 			oids[5] = tmp_oid + sensorProbePlus.SensorsOnDescriptionBase + "." + sensorIndex
 			// common off description
 			oids[6] = tmp_oid + sensorProbePlus.SensorsOffDescriptionBase + "." + sensorIndex
+			oids[7] = tmp_oid + sensorProbePlus.SensorsValueFormatFloatBase + "." + sensorIndex
 		}
 		default : {
 			return details, errors.New("Not yet implemented")
@@ -377,7 +380,7 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 }
 
 	// The sensor Value (as seen in the interface)
-	details.Value, err = ValueToUint64(query.Variables[2])
+	details.Value, err = ValueIEEE754ToFloat64(query.Variables[7])
 	if err != nil {
 		return details, err
 	}
@@ -422,6 +425,18 @@ func ValueToUint64(pdu gosnmp.SnmpPDU) (uint64, error) {
 		}
 	default:
 		return 0, errors.New("Value is not an integer")
+	}
+}
+
+func ValueIEEE754ToFloat64(pdu gosnmp.SnmpPDU) (float64, error) {
+	switch pdu.Type {
+	case gosnmp.Opaque:
+		tmp := pdu.Value.([]uint8)
+		bla := binary.LittleEndian.Uint32(tmp)
+		tmp2 := math.Float32frombits(bla)
+		return float64(tmp2), nil
+	default:
+		return 0, errors.New("Value is not an Opaque")
 	}
 }
 

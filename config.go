@@ -321,7 +321,8 @@ func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overa
 			}
 			for _, tempSensor := range tempSensors {
 				if details.Name == tempSensor.Name {
-					details = tempSensor
+					details.Warning = tempSensor.Warning
+					details.Critical = tempSensor.Critical
 				}
 			}
 		}
@@ -332,7 +333,8 @@ func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overa
 			}
 			for _, humSensor := range humiSensors {
 				if details.Name == humSensor.Name {
-					details = humSensor
+					details.Warning = humSensor.Warning
+					details.Critical = humSensor.Critical
 				}
 			}
 		}
@@ -348,7 +350,7 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	if sensor.SensorType == sensorProbePlus.Motion {
 		sensorString = fmt.Sprintf("%s: %s", sensor.Name, sensor.Description)
 	} else {
-		sensorString = fmt.Sprintf("%s: %d", sensor.Name, sensor.Value)
+		sensorString = fmt.Sprintf("%s: %.1f", sensor.Name, sensor.Value)
 	}
 
 	unit := ""
