@@ -137,7 +137,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 					return sensors, err
 				}
 				// Thresholds are off by a factor of 10 to fake decimal point numbers
-				sensors[counter].Warning.Val.Lower = float64(tmp / 10)
+				sensors[counter].Warning.Val.Lower = float64(tmp) / 10
 				sensors[counter].Warning.Present =  true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighWarning + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
@@ -145,7 +145,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 					return sensors, err
 				}
 				// Thresholds are off by a factor of 10 to fake decimal point numbers
-				sensors[counter].Warning.Val.Upper = float64(tmp / 10)
+				sensors[counter].Warning.Val.Upper = float64(tmp) / 10
 				sensors[counter].Warning.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureLowCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
@@ -153,7 +153,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 					return sensors, err
 				}
 				// Thresholds are off by a factor of 10 to fake decimal point numbers
-				sensors[counter].Critical.Val .Lower= float64(tmp / 10)
+				sensors[counter].Critical.Val .Lower= float64(tmp) / 10
 				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
@@ -161,7 +161,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 					return sensors, err
 				}
 				// Thresholds are off by a factor of 10 to fake decimal point numbers
-				sensors[counter].Critical.Val.Upper = float64(tmp / 10)
+				sensors[counter].Critical.Val.Upper = float64(tmp) / 10
 				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureAcknowledge + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
