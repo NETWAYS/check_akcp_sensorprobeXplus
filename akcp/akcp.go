@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
 	"github.com/NETWAYS/check_akcp_sensorprobeXplus/utils"
 	"github.com/gosnmp/gosnmp"
@@ -12,21 +13,23 @@ import (
 
 // Sensor statuses from the AKCP MIB (probably do not apply to all sensors)
 // noStatus = 1,normal = 2,highWarning = 3,highCritical = 4,lowWarning = 5,lowCritical = 6,sensorError = 7,
+type snsrStts uint64
+
 const (
-	noStatus = 1
-	normal = 2
-	highWarning = 3
-	highCritical = 4
-	lowWarning = 5
-	lowCritical = 6
-	sensorError = 7
+	NoStatus snsrStts = 1
+	Normal snsrStts = 2
+	HighWarning snsrStts = 3
+	HighCritical snsrStts = 4
+	LowWarning snsrStts = 5
+	LowCritical snsrStts = 6
+	SensorError snsrStts = 7
 )
 
 type SensorType uint64
 
-type MayUint64 struct {
+type MayThreshold struct {
 	Present bool
-	Val 	uint64
+	Val 	check.Threshold
 }
 
 
@@ -35,12 +38,11 @@ type SensorDetails struct {
 	Name		string
 	Value		uint64
 	Unit		string
-	Status		uint64
+	Status		snsrStts
 	Acknowledged bool
-	LowWarning 	MayUint64
-	HighWarning	MayUint64
-	LowCritical 	MayUint64
-	HighCritical	MayUint64
+	Warning 	MayThreshold
+	Critical 	MayThreshold
+	Description string
 }
 
 
@@ -81,8 +83,7 @@ func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, 
 			return nil, errors.New("Not yet implemented")
 		}
 	}
-	sensors, err = GetSensorsIDsFromTable(params, oid)
-	return sensors, err
+	return GetSensorsIDsFromTable(params, oid)
 }
 
 func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, error) {
@@ -135,29 +136,33 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].LowWarning.Val = tmp
-				sensors[counter].LowWarning.Present =  true
+				// Thresholds are off by a factor of 10 to fake decimal point numbers
+				sensors[counter].Warning.Val.Lower = float64(tmp / 10)
+				sensors[counter].Warning.Present =  true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighWarning + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].HighWarning.Val = tmp
-				sensors[counter].HighWarning.Present = true
+				// Thresholds are off by a factor of 10 to fake decimal point numbers
+				sensors[counter].Warning.Val.Upper = float64(tmp / 10)
+				sensors[counter].Warning.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureLowCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].LowCritical.Val = tmp
-				sensors[counter].LowCritical.Present = true
+				// Thresholds are off by a factor of 10 to fake decimal point numbers
+				sensors[counter].Critical.Val .Lower= float64(tmp / 10)
+				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureHighCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].HighCritical.Val = tmp
-				sensors[counter].HighCritical.Present = true
+				// Thresholds are off by a factor of 10 to fake decimal point numbers
+				sensors[counter].Critical.Val.Upper = float64(tmp / 10)
+				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorTemperatureAcknowledge + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
@@ -173,7 +178,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].Status = tmp
+				sensors[counter].Status = snsrStts(tmp)
 			}
 		}
 		counter ++
@@ -215,7 +220,7 @@ func GetSensorsIDsFromTable(params *gosnmp.GoSNMP, tableOID string) (sensors[]st
 }
 
 func GetIDsFromHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all sensors
+	// Fetches the IDs of all humidity sensors
 	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
 
 	var oid string
@@ -285,29 +290,29 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].LowWarning.Val = tmp
-				sensors[counter].LowWarning.Present =  true
+				sensors[counter].Warning.Val.Lower = float64(tmp)
+				sensors[counter].Warning.Present =  true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityHighWarning + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].HighWarning.Val = tmp
-				sensors[counter].HighWarning.Present = true
+				sensors[counter].Warning.Val.Upper = float64(tmp)
+				sensors[counter].Warning.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityLowCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].LowCritical.Val = tmp
-				sensors[counter].LowCritical.Present = true
+				sensors[counter].Critical.Val.Lower = float64(tmp)
+				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityHighCritical + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].HighCritical.Val = tmp
-				sensors[counter].HighCritical.Present = true
+				sensors[counter].Critical.Val.Upper = float64(tmp)
+				sensors[counter].Critical.Present = true
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID + sensorProbePlus.SensorHumidityAcknowledge + ".") {
 				tmp, err := ValueToUint64(cell.Pdu)
 				if err != nil {
@@ -323,7 +328,7 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 				if err != nil {
 					return sensors, err
 				}
-				sensors[counter].Status = tmp
+				sensors[counter].Status = snsrStts(tmp)
 			}
 		}
 		counter ++
@@ -336,7 +341,7 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
 	var tmp_oid string
-	var oids = make([]string, 5, 5)
+	var oids = make([]string, 7, 7)
 
 	switch device_type {
 		case SensorProbePlus_type: {
@@ -346,6 +351,10 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 			oids[2] = tmp_oid + sensorProbePlus.SensorValueBase + "." + sensorIndex
 			oids[3] = tmp_oid + sensorProbePlus.SensorUnitBase + "." + sensorIndex
 			oids[4] = tmp_oid + sensorProbePlus.SensorStatusBase + "." + sensorIndex
+			// common on description
+			oids[5] = tmp_oid + sensorProbePlus.SensorsOnDescriptionBase + "." + sensorIndex
+			// common off description
+			oids[6] = tmp_oid + sensorProbePlus.SensorsOffDescriptionBase + "." + sensorIndex
 		}
 		default : {
 			return details, errors.New("Not yet implemented")
@@ -357,13 +366,6 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 	if err != nil {
 		return details, err
 	}
-
-	/*
-	fmt.Println("querySensorDetails:")
-	for i, value := range query.Variables {
-		fmt.Printf("%d: %s\n", i, value)
-	}
-	*/
 
 	// Name
 	details.Name = ValueToString(query.Variables[0])
@@ -384,9 +386,16 @@ func QuerySensorDetails (params *gosnmp.GoSNMP, sensorIndex string, device_type 
 	details.Unit = ValueToString(query.Variables[3])
 
 	// Sensor status (is the value inside the thresholds configured on the device
-	details.Status, err = ValueToUint64(query.Variables[4])
+	tmp, err := ValueToUint64(query.Variables[4])
 	if err != nil {
 		return details, err
+	}
+	details.Status = snsrStts(tmp)
+
+	if details.Status != Normal {
+		details.Description = ValueToString(query.Variables[5])
+	} else {
+		details.Description = ValueToString(query.Variables[6])
 	}
 
 	return details, nil

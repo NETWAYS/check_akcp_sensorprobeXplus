@@ -344,7 +344,13 @@ func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overa
 }
 
 func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
-	sensorString := fmt.Sprintf("%s: %d", sensor.Name, sensor.Value)
+	var sensorString string
+	if sensor.SensorType == sensorProbePlus.Motion {
+		sensorString = fmt.Sprintf("%s: %s", sensor.Name, sensor.Description)
+	} else {
+		sensorString = fmt.Sprintf("%s: %d", sensor.Name, sensor.Value)
+	}
+
 	unit := ""
 	if sensor.Unit == "C" {
 		unit = "℃"
@@ -358,19 +364,11 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	pf.Label = sensor.Name
 	pf.Value = sensor.Value
 
-	if sensor.HighWarning.Present && sensor.LowWarning.Present {
-		tmp := check.Threshold{}
-		tmp.Inside = false
-		tmp.Lower = float64(sensor.LowWarning.Val)
-		tmp.Upper = float64(sensor.HighWarning.Val)
-		pf.Warn = &tmp
+	if sensor.Warning.Present {
+		pf.Warn = &sensor.Warning.Val
 	}
-	if sensor.HighCritical.Present && sensor.LowCritical.Present {
-		tmp := check.Threshold{}
-		tmp.Inside = false
-		tmp.Lower = float64(sensor.LowCritical.Val)
-		tmp.Upper = float64(sensor.HighCritical.Val)
-		pf.Crit = &tmp
+	if sensor.Critical.Present {
+		pf.Crit = &sensor.Critical.Val
 	}
 
 	if sensor.Unit != "C" {
@@ -383,17 +381,17 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	if sensor.Status == 2 {
 		overall.AddOK(sensorString + " | " + pf.String())
 	} else if sensor.Status == 3 || sensor.Status == 5 {
-		if sensor.LowWarning.Present && (sensor.Value < sensor.LowWarning.Val) {
-			sensorString += fmt.Sprintf(" is lower than warning threshold %d%s", sensor.LowWarning.Val, unit)
-		} else if  sensor.HighWarning.Present && (sensor.Value > sensor.HighWarning.Val) {
-			sensorString += fmt.Sprintf(" is higher than warning threshold %d%s", sensor.HighWarning.Val, unit)
+		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
+			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
+		} else if  sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
+			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
 		}
 		overall.AddWarning(sensorString + " | " + pf.String())
 	} else if sensor.Status == 6 || sensor.Status == 4 {
-		if sensor.LowCritical.Present && (sensor.Value < sensor.LowCritical.Val) {
-			sensorString += fmt.Sprintf(" is lower than critical threshold %d%s", sensor.LowCritical.Val, unit)
-		} else if  sensor.HighCritical.Present && (sensor.Value > sensor.HighCritical.Val) {
-			sensorString += fmt.Sprintf(" is higher than critical threshold %d%s", sensor.HighCritical.Val, unit)
+		if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
+			sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
+		} else if  sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
+			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
 		}
 		overall.AddCritical(sensorString + " | " + pf.String())
 	} else if sensor.Status == 7 {

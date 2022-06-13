@@ -141,6 +141,8 @@ const (
 	SensorValueBase = SensorBase + ".4"
 	SensorUnitBase = SensorBase + ".5"
 	SensorStatusBase = SensorBase + ".6"
+	SensorsOnDescriptionBase = SensorBase + ".52"
+	SensorsOffDescriptionBase = SensorBase + ".53"
 
 	CommonTable = Sensors + ".1"
 	TemperatureTable = Sensors + ".2"
