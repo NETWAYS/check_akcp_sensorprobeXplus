@@ -50,3 +50,21 @@ WARNING - Device SPX+ Demo at location Room 217 (SPX+ F7 1.0.5233 May 12 2020 09
 [OK] Temp Sensor Test: 26.1℃
 [OK] Motion Detector Port 4: Erkannt  | 'Dual Humidity Port 1'=25%;32:66;23:69 'Dual Temperature Port 1'=31.1C;20.7:30;10.6:40 'Temp Sensor Test'=26.1C;20.8:30;10.5:40 'Motion Detector Port 4'=0
 ```
+
+## License
+
+Copyright (c) 2022 [NETWAYS GmbH](mailto:info@netways.de) \
+Copyright (c) 2022 [Lorenz Kästle](mailto:lorenz.kaestle@netways.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see [gnu.org/licenses](https://www.gnu.org/licenses/).
