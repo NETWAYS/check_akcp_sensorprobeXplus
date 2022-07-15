@@ -40,3 +40,13 @@ WARNING - states: unknown=1 warning=1 ok=3
 [OK] Dual Temperature Port 2: 27
 [OK] Airflow Port 3: 0%
 ```
+
+```
+./check_akcp_sensorprobeXplus -h 192.168.1.1 -c public
+WARNING - Device SPX+ Demo at location Room 217 (SPX+ F7 1.0.5233 May 12 2020 09:41:)
+
+[WARNING] Dual Humidity Port 1: 25.0% is lower than warning threshold 32.0%
+[WARNING] Dual Temperature Port 1: 31.1℃ is higher than warning threshold 30.0℃
+[OK] Temp Sensor Test: 26.1℃
+[OK] Motion Detector Port 4: Erkannt  | 'Dual Humidity Port 1'=25%;32:66;23:69 'Dual Temperature Port 1'=31.1C;20.7:30;10.6:40 'Temp Sensor Test'=26.1C;20.8:30;10.5:40 'Motion Detector Port 4'=0
+```
