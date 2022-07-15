@@ -1,6 +1,6 @@
 # check_akcp_sensorprobeXplus
 
-Check plugin to query sensor data from AKCP sensor products via SNMP.
+Check plugin to query sensor data from AKCP sensorProbeX+ via SNMP.
 
 # Building
 
