@@ -8,7 +8,7 @@ import (
 
 type Cell struct {
 	Pdu gosnmp.SnmpPDU
-	Id 	string
+	Id  string
 }
 
 func ParseSnmpTable(table *[]gosnmp.SnmpPDU, prefixLength uint) (*map[string][]Cell, error) {
@@ -28,11 +28,11 @@ func ParseSnmpTable(table *[]gosnmp.SnmpPDU, prefixLength uint) (*map[string][]C
 		oid := value.Name
 		tmp := strings.Split(oid, ".")
 		id := tmp[prefixLength]
-		rowId := strings.Join(tmp[prefixLength +1:len(tmp) -1], ".")
+		rowId := strings.Join(tmp[prefixLength+1:len(tmp)-1], ".")
 
 		entry, ok := result[rowId]
 		cellVal := Cell{
-			Id: id,
+			Id:  id,
 			Pdu: value,
 		}
 
