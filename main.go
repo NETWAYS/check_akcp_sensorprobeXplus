@@ -15,10 +15,10 @@ func main() {
 	defer check.CatchPanic()
 
 	plugin := check.NewConfig()
-	plugin.Name = "check_akcp"
+	plugin.Name = "check_akcp_sensorprobeXplus"
+	plugin.Version = "1.0.1"
 	plugin.Readme = readme
 	plugin.Timeout = 30
-	plugin.Version = "0.1"
 
 	config := &Config{}
 	config.BindArguments(plugin.FlagSet)
