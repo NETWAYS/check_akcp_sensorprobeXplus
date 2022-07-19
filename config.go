@@ -51,6 +51,7 @@ const (
 	tankSender
 	temperatureArray
 	towerLED
+	runTestSuccess
 )
 
 var modes = map[string]uint64{
@@ -58,6 +59,7 @@ var modes = map[string]uint64{
 	"single":             single,
 	"temperatureSensors": temperaturSensors,
 	"humiditySensors":    humiditySensors,
+	"run_test_success":   runTestSuccess,
 }
 
 //var default_excluded_types []string
@@ -153,6 +155,8 @@ func (c *Config) Validate() error {
 				return errors.New("Mode is not a valid value")
 			}
 		}
+	} else if val == runTestSuccess {
+		check.ExitRaw(0, "It seems like you can execute this programm")
 	} else {
 		if val == single && c.sensorPort == "" {
 			return errors.New("No sensorPort was given")
@@ -379,20 +383,19 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 		pf.Uom = "C"
 	}
 
-
 	if sensor.Status == 2 {
 		overall.AddOK(sensorString + " | " + pf.String())
 	} else if sensor.Status == 3 || sensor.Status == 5 {
 		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
-		} else if  sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
+		} else if sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
 		}
 		overall.AddWarning(sensorString + " | " + pf.String())
 	} else if sensor.Status == 6 || sensor.Status == 4 {
 		if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
-		} else if  sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
+		} else if sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
 		}
 		overall.AddCritical(sensorString + " | " + pf.String())
