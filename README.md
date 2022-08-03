@@ -61,6 +61,13 @@ WARNING - Device SPX+ Demo at location Room 217 (SPX+ F7 1.0.5233 May 12 2020 09
 [OK] Motion Detector Port 4: Erkannt  | 'Dual Humidity Port 1'=25%;32:66;23:69 'Dual Temperature Port 1'=31.1C;20.7:30;10.6:40 'Temp Sensor Test'=26.1C;20.8:30;10.5:40 'Motion Detector Port 4'=0
 ```
 
+Or using a different SNMP community
+```
+check_akcp_sensorprobeXplus -h 192.168.1.1 --community secret
+....
+
+```
+
 ## License
 
 Copyright (c) 2022 [NETWAYS GmbH](mailto:info@netways.de) \
