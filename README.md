@@ -17,10 +17,13 @@ CentOS/RHEL
 	yum install epel-release
 	yum install golang
 
+OpenSuse (probably SLES too)
+
+	zypper install go
 
 ## Compiling
 
-Debian/Ubuntu/CentOS/RHEL
+Debian/Ubuntu/CentOS/RHEL/OpenSuse
 ```
 git clone https://github.com/NETWAYS/check_akcp_sensorprobeXplus
 cd check_akcp_sensorprobeXplus
