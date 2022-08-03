@@ -6,14 +6,21 @@ Check plugin to query sensor data from AKCP sensorProbeX+ via SNMP.
 
 ## Dependencies
 There are some go dependencies, but go will fetch them for building dynamically from the internet.
+Additionaly to the golang toolchain you might want to install git.
 
 Debian/Ubuntu
 
 	apt-get install golang
 
+CentOS/RHEL
+
+	yum install epel-release
+	yum install golang
+
+
 ## Compiling
 
-Debian/Ubuntu
+Debian/Ubuntu/CentOS/RHEL
 ```
 git clone https://github.com/NETWAYS/check_akcp_sensorprobeXplus
 cd check_akcp_sensorprobeXplus
