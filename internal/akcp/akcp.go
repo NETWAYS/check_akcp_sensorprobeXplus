@@ -351,7 +351,7 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 func QuerySensorDetails(params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
 	var tmp_oid string
-	var oids = make([]string, 8, 8)
+	var oids = make([]string, 8)
 
 	switch device_type {
 	case SensorProbePlus_type:
@@ -448,17 +448,4 @@ func ValueIEEE754ToFloat64(pdu gosnmp.SnmpPDU) (float64, error) {
 	default:
 		return 0, errors.New("Value is not an Opaque")
 	}
-}
-
-func printValue(pdu gosnmp.SnmpPDU) error {
-	fmt.Printf("%s = ", pdu.Name)
-
-	switch pdu.Type {
-	case gosnmp.OctetString:
-		b := pdu.Value.([]byte)
-		fmt.Printf("STRING: %s\n", string(b))
-	default:
-		fmt.Printf("TYPE %d: %d\n", pdu.Type, gosnmp.ToBigInt(pdu.Value))
-	}
-	return nil
 }
