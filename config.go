@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp"
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/akcp"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/akcp/sensorProbePlus"
 	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/go-check/perfdata"
 	"github.com/NETWAYS/go-check/result"

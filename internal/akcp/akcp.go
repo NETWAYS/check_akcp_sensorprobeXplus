@@ -7,8 +7,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/utils"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/akcp/sensorProbePlus"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/utils"
 	"github.com/NETWAYS/go-check"
 	"github.com/gosnmp/gosnmp"
 )
