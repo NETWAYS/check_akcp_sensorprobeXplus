@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,12 +11,42 @@ import (
 
 const readme = `Check plugin for the AKCP Sensorprobe X plus`
 
+const license = `
+Copyright (C) 2023 NETWAYS GmbH <info@netways.de>
+`
+
+// nolint: gochecknoglobals
+var (
+	// These get filled at build time with the proper vaules
+	version = "development"
+	commit  = "HEAD"
+	date    = "latest"
+)
+
+//goland:noinspection GoBoolExpressions
+func buildVersion() string {
+	result := version
+
+	if commit != "" {
+		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
+	}
+
+	if date != "" {
+		result = fmt.Sprintf("%s\ndate: %s", result, date)
+	}
+
+	result += "\n" + license
+
+	return result
+}
+
 func main() {
 	defer check.CatchPanic()
 
 	plugin := check.NewConfig()
+	version := buildVersion()
 	plugin.Name = "check_akcp_sensorprobeXplus"
-	plugin.Version = "1.0.1"
+	plugin.Version = version
 	plugin.Readme = readme
 	plugin.Timeout = 30
 
