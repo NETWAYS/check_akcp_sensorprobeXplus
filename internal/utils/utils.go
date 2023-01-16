@@ -37,7 +37,7 @@ func ParseSnmpTable(table *[]gosnmp.SnmpPDU, prefixLength uint) (*map[string][]C
 		}
 
 		if !ok {
-			result[rowId] = make([]Cell, 1, 1)
+			result[rowId] = make([]Cell, 1)
 			result[rowId][0] = cellVal
 		} else {
 			result[rowId] = append(entry, cellVal)

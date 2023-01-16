@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp"
-	"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp/sensorProbePlus"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/akcp"
+	"github.com/NETWAYS/check_akcp_sensorprobeXplus/internal/akcp/sensorProbePlus"
 	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/go-check/perfdata"
 	"github.com/NETWAYS/go-check/result"
@@ -343,7 +343,10 @@ func queryAllSensorsMode(params *gosnmp.GoSNMP, c *Config, overall *result.Overa
 			}
 		}
 
-		mapSensorStatus(details, overall)
+		err = mapSensorStatus(details, overall)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -422,7 +425,10 @@ func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall
 		}
 
 		if details.SensorType == uint64(sensor_type) {
-			mapSensorStatus(details, overall)
+			err = mapSensorStatus(details, overall)
+			if err != nil {
+				check.ExitError(err)
+			}
 		}
 	}
 	return nil
@@ -431,17 +437,14 @@ func querySensorByType(params *gosnmp.GoSNMP, c *Config, overall *result.Overall
 func queryTemperatureSensors(params *gosnmp.GoSNMP, c *Config, overall *result.Overall, device_type int) (err error) {
 
 	// Get all sensors
-	sensors, err := akcp.QueryTemperatureTable(params, device_type)
-	/*
-		sensors, err := akcp.GetIDsFromTemperatureTable(params, device_type)
-		if err != nil {
-			check.ExitError(err)
-		}
-	*/
+	// TODO: Error Handling
+	sensors, _ := akcp.QueryTemperatureTable(params, device_type)
 
 	for _, details := range sensors {
-		mapSensorStatus(details, overall)
-
+		err = mapSensorStatus(details, overall)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -455,7 +458,10 @@ func queryHumiditySensors(params *gosnmp.GoSNMP, c *Config, overall *result.Over
 	}
 
 	for _, sensor := range sensors {
-		mapSensorStatus(sensor, overall)
+		err = mapSensorStatus(sensor, overall)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
