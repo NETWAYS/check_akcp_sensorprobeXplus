@@ -398,25 +398,25 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	}
 
 	if sensor.Status == 2 {
-		overall.AddOK(sensorString + " | " + pf.String())
+		overall.Add(check.OK, sensorString+" | "+pf.String())
 	} else if sensor.Status == 3 || sensor.Status == 5 {
 		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
 		} else if sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
 		}
-		overall.AddWarning(sensorString + " | " + pf.String())
+		overall.Add(check.Warning, sensorString+" | "+pf.String())
 	} else if sensor.Status == 6 || sensor.Status == 4 {
 		if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
 		} else if sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
 		}
-		overall.AddCritical(sensorString + " | " + pf.String())
+		overall.Add(check.Critical, sensorString+" | "+pf.String())
 	} else if sensor.Status == 7 {
-		overall.AddCritical(sensor.Name + " ERROR!" + " | " + pf.String())
+		overall.Add(check.Critical, sensor.Name+" ERROR!"+" | "+pf.String())
 	} else {
-		overall.AddUnknown(sensorString + " | " + pf.String())
+		overall.Add(check.Unknown, sensorString+" | "+pf.String())
 	}
 
 	return nil
