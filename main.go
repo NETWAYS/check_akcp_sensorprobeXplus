@@ -77,11 +77,13 @@ func main() {
 	// Modify output here until https://github.com/Icinga/icinga2/issues/9379 is fixed
 	// TODO: Remove this dirty hack
 	var output string
+
 	var perfdata []string
 
 	for _, partial := range overall.Outputs {
 		tmp := strings.Split(partial, "|")
 		output += "\n" + tmp[0]
+
 		if len(tmp) > 1 {
 			perfdata = append(perfdata, strings.TrimSpace(tmp[1]))
 		}

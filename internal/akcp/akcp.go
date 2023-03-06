@@ -70,10 +70,9 @@ func GetSensorTypeInt(type_string string, device_type int) (uint32, error) {
 	}
 }
 
+// Fetches the IDs of all sensors
+// This ID consists of four positive integers, separated by dots (aka usable as an OID)
 func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all sensors
-	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
-
 	var oid string
 
 	switch device_type {
@@ -86,11 +85,13 @@ func QuerySensorList(params *gosnmp.GoSNMP, device_type int) (sensors []string, 
 			return nil, errors.New("Not yet implemented")
 		}
 	}
+
 	return GetSensorsIDsFromTable(params, oid)
 }
 
 func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, error) {
 	var oid string
+
 	var sensors []SensorDetails
 
 	switch device_type {
@@ -117,6 +118,7 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 	sensors = make([]SensorDetails, len(*foo))
 
 	counter := 0
+
 	for _, row := range *foo {
 		// Every row is a temperature sensor
 		for _, cell := range row {
@@ -192,9 +194,8 @@ func QueryTemperatureTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetail
 	return sensors, nil
 }
 
+// Fetches the IDs of all temperature sensors in the temperature table
 func GetIDsFromTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all temperature sensors in the temperature table
-
 	var oid string
 
 	switch device_type {
@@ -207,7 +208,9 @@ func GetIDsFromTemperatureTable(params *gosnmp.GoSNMP, device_type int) (sensors
 			return nil, errors.New("Not yet implemented")
 		}
 	}
+
 	sensors, err = GetSensorsIDsFromTable(params, oid)
+
 	return sensors, err
 }
 
@@ -216,20 +219,18 @@ func GetSensorsIDsFromTable(params *gosnmp.GoSNMP, tableOID string) (sensors []s
 	if err != nil {
 		return nil, err
 	}
+
 	for _, variable := range results {
-		//printValue(variable)
 		sensors = append(sensors, ValueToString(variable))
-		//fmt.Println(variable.Name)
 	}
 
-	//fmt.Println(sensors)
 	return sensors, nil
 }
 
-func GetIDsFromHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
-	// Fetches the IDs of all humidity sensors
-	// This ID consists of four positive integers, separated by dots (aka usable as an OID)
+// Fetches the IDs of all humidity sensors
+// This ID consists of four positive integers, separated by dots (aka usable as an OID)
 
+func GetIDsFromHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []string, err error) {
 	var oid string
 
 	switch device_type {
@@ -244,11 +245,13 @@ func GetIDsFromHumidityTable(params *gosnmp.GoSNMP, device_type int) (sensors []
 	}
 
 	sensors, err = GetSensorsIDsFromTable(params, oid)
+
 	return sensors, err
 }
 
 func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, error) {
 	var oid string
+
 	var sensors []SensorDetails
 
 	switch device_type {
@@ -275,11 +278,10 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 	sensors = make([]SensorDetails, len(*foo))
 
 	counter := 0
+
 	for _, row := range *foo {
 		// Every row is a temperature sensor
-		//fmt.Printf("%#v:\n", row)
 		for _, cell := range row {
-			//fmt.Printf("%#v\n", cell)
 			if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID+sensorProbePlus.SensorHumidityDescription+".") {
 				sensors[counter].Name = ValueToString(cell.Pdu)
 			} else if strings.HasPrefix(cell.Pdu.Name, akcpBaseOID+sensorProbePlus.SensorHumidityType+".") {
@@ -350,7 +352,9 @@ func QueryHumidityTable(snmp *gosnmp.GoSNMP, device_type int) ([]SensorDetails, 
 
 func QuerySensorDetails(params *gosnmp.GoSNMP, sensorIndex string, device_type int) (SensorDetails, error) {
 	var details SensorDetails
+
 	var tmp_oid string
+
 	var oids = make([]string, 8)
 
 	switch device_type {
@@ -403,6 +407,7 @@ func QuerySensorDetails(params *gosnmp.GoSNMP, sensorIndex string, device_type i
 	if err != nil {
 		return details, err
 	}
+
 	details.Status = snsrStts(tmp)
 
 	if details.Status != Normal {
@@ -415,17 +420,16 @@ func QuerySensorDetails(params *gosnmp.GoSNMP, sensorIndex string, device_type i
 }
 
 func ValueToString(pdu gosnmp.SnmpPDU) string {
-	switch pdu.Type {
+	switch pdu.Type { //nolint: exhaustive
 	case gosnmp.OctetString:
 		return string(pdu.Value.([]byte))
 	default:
-		//fmt.Printf("TYPE %d: %d\n", pdu.Type, gosnmp.ToBigInt(pdu.Value))
 		return fmt.Sprintf("%d", gosnmp.ToBigInt(pdu.Value))
 	}
 }
 
 func ValueToUint64(pdu gosnmp.SnmpPDU) (uint64, error) {
-	switch pdu.Type {
+	switch pdu.Type { //nolint: exhaustive
 	case gosnmp.Integer:
 		var val = gosnmp.ToBigInt(pdu.Value)
 		if val.IsUint64() {
@@ -439,11 +443,12 @@ func ValueToUint64(pdu gosnmp.SnmpPDU) (uint64, error) {
 }
 
 func ValueIEEE754ToFloat64(pdu gosnmp.SnmpPDU) (float64, error) {
-	switch pdu.Type {
+	switch pdu.Type { //nolint: exhaustive
 	case gosnmp.Opaque:
 		tmp := pdu.Value.([]uint8)
 		bla := binary.LittleEndian.Uint32(tmp)
 		tmp2 := math.Float32frombits(bla)
+
 		return float64(tmp2), nil
 	default:
 		return 0, errors.New("Value is not an Opaque")
