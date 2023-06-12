@@ -405,7 +405,6 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 		}
 
 		overall.AddSubcheck(sc)
-
 	} else if sensor.Status == 3 || sensor.Status == 5 {
 		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
