@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/NETWAYS/go-check"
 	"github.com/NETWAYS/go-check/result"
@@ -74,22 +73,5 @@ func main() {
 		check.ExitError(err)
 	}
 
-	// Modify output here until https://github.com/Icinga/icinga2/issues/9379 is fixed
-	// TODO: Remove this dirty hack
-	var output string
-
-	var perfdata []string
-
-	for _, partial := range overall.Outputs {
-		tmp := strings.Split(partial, "|")
-		output += "\n" + tmp[0]
-
-		if len(tmp) > 1 {
-			perfdata = append(perfdata, strings.TrimSpace(tmp[1]))
-		}
-	}
-
-	output = overall.GetSummary() + "\n" + output + " | " + strings.Join(perfdata, " ")
-
-	check.ExitRaw(overall.GetStatus(), output)
+	check.ExitRaw(overall.GetStatus(), overall.GetOutput())
 }

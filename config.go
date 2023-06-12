@@ -398,25 +398,57 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	}
 
 	if sensor.Status == 2 {
-		overall.Add(check.OK, sensorString+" | "+pf.String())
+		sc := result.PartialResult{
+			State:    check.OK,
+			Output:   sensorString,
+			Perfdata: perfdata.PerfdataList{&pf},
+		}
+
+		overall.AddSubcheck(sc)
+
 	} else if sensor.Status == 3 || sensor.Status == 5 {
 		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
 		} else if sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
 		}
-		overall.Add(check.Warning, sensorString+" | "+pf.String())
+
+		sc := result.PartialResult{
+			State:    check.Warning,
+			Output:   sensorString,
+			Perfdata: perfdata.PerfdataList{&pf},
+		}
+
+		overall.AddSubcheck(sc)
 	} else if sensor.Status == 6 || sensor.Status == 4 {
 		if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
 			sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
 		} else if sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
 			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
 		}
-		overall.Add(check.Critical, sensorString+" | "+pf.String())
+
+		sc := result.PartialResult{
+			State:    check.Critical,
+			Output:   sensorString,
+			Perfdata: perfdata.PerfdataList{&pf},
+		}
+
+		overall.AddSubcheck(sc)
 	} else if sensor.Status == 7 {
-		overall.Add(check.Critical, sensor.Name+" ERROR!"+" | "+pf.String())
+		sc := result.PartialResult{
+			State:    check.Critical,
+			Output:   sensor.Name + " ERROR!",
+			Perfdata: perfdata.PerfdataList{&pf},
+		}
+
+		overall.AddSubcheck(sc)
 	} else {
-		overall.Add(check.Unknown, sensorString+" | "+pf.String())
+		sc := result.PartialResult{
+			State:  check.Unknown,
+			Output: sensorString,
+		}
+
+		overall.AddSubcheck(sc)
 	}
 
 	return nil
