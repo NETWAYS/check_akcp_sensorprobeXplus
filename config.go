@@ -398,11 +398,10 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	}
 
 	if sensor.Status == 2 {
-		sc := result.PartialResult{
-			State:    check.OK,
-			Output:   sensorString,
-			Perfdata: perfdata.PerfdataList{&pf},
-		}
+		sc := result.PartialResult{}
+		sc.SetState(check.OK)
+		sc.Output = sensorString
+		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else if sensor.Status == 3 || sensor.Status == 5 {
@@ -412,11 +411,10 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
 		}
 
-		sc := result.PartialResult{
-			State:    check.Warning,
-			Output:   sensorString,
-			Perfdata: perfdata.PerfdataList{&pf},
-		}
+		sc := result.PartialResult{}
+		sc.SetState(check.Warning)
+		sc.Output = sensorString
+		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else if sensor.Status == 6 || sensor.Status == 4 {
@@ -426,26 +424,23 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
 		}
 
-		sc := result.PartialResult{
-			State:    check.Critical,
-			Output:   sensorString,
-			Perfdata: perfdata.PerfdataList{&pf},
-		}
+		sc := result.PartialResult{}
+		sc.SetState(check.Critical)
+		sc.Output = sensorString
+		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else if sensor.Status == 7 {
-		sc := result.PartialResult{
-			State:    check.Critical,
-			Output:   sensor.Name + " ERROR!",
-			Perfdata: perfdata.PerfdataList{&pf},
-		}
+		sc := result.PartialResult{}
+		sc.SetState(check.Critical)
+		sc.Output = sensor.Name + " ERROR!"
+		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else {
-		sc := result.PartialResult{
-			State:  check.Unknown,
-			Output: sensorString,
-		}
+		sc := result.PartialResult{}
+		sc.SetState(check.Unknown)
+		sc.Output = sensorString
 
 		overall.AddSubcheck(sc)
 	}
