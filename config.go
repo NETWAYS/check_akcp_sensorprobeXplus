@@ -399,7 +399,7 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 
 	if sensor.Status == 2 {
 		sc := result.PartialResult{}
-		sc.SetState(check.OK)
+		_ = sc.SetState(check.OK)
 		sc.Output = sensorString
 		sc.Perfdata.Add(&pf)
 
@@ -412,7 +412,7 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 		}
 
 		sc := result.PartialResult{}
-		sc.SetState(check.Warning)
+		_ = sc.SetState(check.Warning)
 		sc.Output = sensorString
 		sc.Perfdata.Add(&pf)
 
@@ -425,21 +425,21 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 		}
 
 		sc := result.PartialResult{}
-		sc.SetState(check.Critical)
+		_ = sc.SetState(check.Critical)
 		sc.Output = sensorString
 		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else if sensor.Status == 7 {
 		sc := result.PartialResult{}
-		sc.SetState(check.Critical)
+		_ = sc.SetState(check.Critical)
 		sc.Output = sensor.Name + " ERROR!"
 		sc.Perfdata.Add(&pf)
 
 		overall.AddSubcheck(sc)
 	} else {
 		sc := result.PartialResult{}
-		sc.SetState(check.Unknown)
+		_ = sc.SetState(check.Unknown)
 		sc.Output = sensorString
 
 		overall.AddSubcheck(sc)
