@@ -404,32 +404,28 @@ func mapSensorStatus(sensor akcp.SensorDetails, overall *result.Overall) error {
 	if sensor.Status == 2 {
 		_ = sc.SetState(check.OK)
 		sc.Perfdata.Add(&pf)
-
 	} else if sensor.Status == 3 || sensor.Status == 5 {
-		if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
-			sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
-		} else if sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
-			sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
-		}
+		// if sensor.Warning.Present && (float64(sensor.Value) <= sensor.Warning.Val.Lower) {
+		// 	sensorString += fmt.Sprintf(" is lower than warning threshold %.1f%s", sensor.Warning.Val.Lower, unit)
+		// } else if sensor.Warning.Present && (float64(sensor.Value) >= sensor.Warning.Val.Upper) {
+		// 	sensorString += fmt.Sprintf(" is higher than warning threshold %.1f%s", sensor.Warning.Val.Upper, unit)
+		// }
 
 		_ = sc.SetState(check.Warning)
 		sc.Perfdata.Add(&pf)
-
 	} else if sensor.Status == 6 || sensor.Status == 4 {
-		if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
-			sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
-		} else if sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
-			sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
-		}
+		// if sensor.Critical.Present && (float64(sensor.Value) <= sensor.Critical.Val.Lower) {
+		// 	sensorString += fmt.Sprintf(" is lower than critical threshold %.1f%s", sensor.Critical.Val.Lower, unit)
+		// } else if sensor.Critical.Present && (float64(sensor.Value) >= sensor.Critical.Val.Upper) {
+		// 	sensorString += fmt.Sprintf(" is higher than critical threshold %.1f%s", sensor.Critical.Val.Upper, unit)
+		// }
 
 		_ = sc.SetState(check.Critical)
 		sc.Perfdata.Add(&pf)
-
 	} else if sensor.Status == 7 {
 		_ = sc.SetState(check.Critical)
 		sc.Output = sensor.Name + " ERROR!"
 		sc.Perfdata.Add(&pf)
-
 	}
 
 	overall.AddSubcheck(sc)

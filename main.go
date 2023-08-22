@@ -44,6 +44,7 @@ func main() {
 
 	plugin := check.NewConfig()
 	version := buildVersion()
+
 	plugin.Name = "check_akcp_sensorprobeXplus"
 	plugin.Version = version
 	plugin.Readme = readme
@@ -60,6 +61,7 @@ func main() {
 	}
 
 	err := config.Validate()
+
 	if err != nil {
 		check.ExitError(err)
 	}
@@ -67,6 +69,7 @@ func main() {
 	var overall result.Overall
 
 	err = config.Run(&overall)
+
 	if err != nil {
 		check.ExitError(err)
 	}
