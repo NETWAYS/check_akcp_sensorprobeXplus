@@ -1,4 +1,5 @@
 # See documentation at https://goreleaser.com
+version: 2
 before:
   hooks:
     - go mod download
@@ -23,11 +24,6 @@ release:
     name: check_akcp_sensorprobeXplus
 archives:
   - format: binary
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
