@@ -1,9 +1,5 @@
 package sensorProbePlus
 
-import ()
-
-//"github.com/NETWAYS/check_akcp_sensorprobeXplus/akcp"
-
 // Taken from the AKCP MIB
 // temperature = 1,humidity-dual = 2,temperature-dual = 3,four-20mA = 4,dcvoltage = 5,airflow = 6,dry-inout = 7,dry-in = 8,motion = 9,water = 10,security = 11,siren = 12,acvoltage = 14,relay = 19,thermocouple = 20,smoke = 21,drycontact-array = 22,temperature-array = 23,waterrope = 24,fuellevel = 25,tanksender = 26,five-drycontacts = 31,irms = 34,vrms = 35,watt = 36,energy = 37,powerfactor = 38,reactive = 39,cbstatus = 40,handlelock = 49,air-pressure = 51,ir-remote = 52,digital-amp = 53,digital-watt = 54,valve-status = 55,lcd = 86,buzzer = 87,tower-led = 88,pulse-counter = 89,flow = 90,edge-counter = 91,tanklevel-height = 92,tanklevel-volume = 93,diff-pressure = 94,tanklevel-2m = 95,tanklevel-5m = 96,tanklevel-10m = 97,tanklevel-15m = 98,tanklevel-20m = 99,thermostat = 128,virtual = 129,sound = 130,software-motion = 131,board-state = 133,power-meter = 134,access = 137,door = 138,reader = 139,
 const (
