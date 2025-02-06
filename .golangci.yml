@@ -10,6 +10,7 @@ issues:
 linters:
    enable-all: true
    disable:
+     - exportloopref
      - cyclop
      - depguard
      - exhaustruct
