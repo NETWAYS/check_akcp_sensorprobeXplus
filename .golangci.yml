@@ -1,31 +1,41 @@
 run:
   timeout: 5m
-  skip-files:
-    - '(.+)_test\.go'
-    - 'internal/config/http_config.go'
-    - 'internal/config/config.go'
-
+  tests: false
+issues:
+  exclude-rules:
+    - path: 'internal/akcp/sensorProbePlus/sensorProbePlus.go'
+      linters:
+        - revive
+        - stylecheck
 linters:
-  disable-all: false
-  enable:
-    - dogsled
-    - dupl
-    - whitespace
-    - wsl
-    - exportloopref
-  disable:
-    - funlen
-    - scopelint
-    - bodyclose
-    - contextcheck
-    - nilerr
-    - noctx
-    - rowserrcheck
-    - sqlclosecheck
-    - structcheck
-    - unparam
-    - musttag
-  presets:
-    - bugs
-    - unused
-  fast: false
+   enable-all: true
+   disable:
+     - exportloopref
+     - cyclop
+     - depguard
+     - exhaustruct
+     - forbidigo
+     - forcetypeassert
+     - gci
+     - gochecknoglobals
+     - gochecknoinits
+     - godox
+     - godot
+     - err113
+     - gofumpt
+     - mnd
+     - lll
+     - musttag
+     - nakedret
+     - nlreturn
+     - nolintlint
+     - nonamedreturns
+     - tagliatelle
+     - varnamelen
+     - wrapcheck
+     - funlen
+linters-settings:
+  estif:
+    min-complexity: 4
+  maligned:
+    suggest-new: true

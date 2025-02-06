@@ -8,7 +8,7 @@ import (
 
 type Cell struct {
 	Pdu gosnmp.SnmpPDU
-	Id  string
+	ID  string
 }
 
 // Get a list of PDUs and try to form a table from it
@@ -17,7 +17,7 @@ type Cell struct {
 // its length is computed by (number of oid points - 1 - prefixLength)
 //
 // Assumptions:
-// All OIDs in the list _table_ have the same lenght (= number of separators)
+// All OIDs in the list _table_ have the same length (= number of separators)
 func ParseSnmpTable(table *[]gosnmp.SnmpPDU, prefixLength uint) (*map[string][]Cell, error) {
 	var result = make(map[string][]Cell)
 	// compute parameters
@@ -25,19 +25,19 @@ func ParseSnmpTable(table *[]gosnmp.SnmpPDU, prefixLength uint) (*map[string][]C
 		oid := value.Name
 		tmp := strings.Split(oid, ".")
 		id := tmp[prefixLength]
-		rowId := strings.Join(tmp[prefixLength+1:len(tmp)-1], ".")
+		rowID := strings.Join(tmp[prefixLength+1:len(tmp)-1], ".")
 
-		entry, ok := result[rowId]
+		entry, ok := result[rowID]
 		cellVal := Cell{
-			Id:  id,
+			ID:  id,
 			Pdu: value,
 		}
 
 		if !ok {
-			result[rowId] = make([]Cell, 1)
-			result[rowId][0] = cellVal
+			result[rowID] = make([]Cell, 1)
+			result[rowID][0] = cellVal
 		} else {
-			result[rowId] = append(entry, cellVal)
+			result[rowID] = append(entry, cellVal)
 		}
 	}
 
