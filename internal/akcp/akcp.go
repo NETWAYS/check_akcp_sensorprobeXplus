@@ -454,9 +454,9 @@ func ValueToUint64(pdu gosnmp.SnmpPDU) (uint64, error) {
 		var val = gosnmp.ToBigInt(pdu.Value)
 		if val.IsUint64() {
 			return val.Uint64(), nil
-		} else {
-			return 0, errors.New("value not in uint64")
 		}
+
+		return 0, errors.New("value not in uint64")
 	default:
 		return 0, errors.New("value is not an integer")
 	}
