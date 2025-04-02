@@ -1,36 +1,53 @@
+version: "2"
 run:
-  timeout: 5m
   tests: false
-issues:
-  exclude-rules:
-    - path: 'internal/akcp/sensorProbePlus/sensorProbePlus.go'
-      linters:
-        - revive
-        - stylecheck
 linters:
-   enable-all: true
-   disable:
-     - exportloopref
-     - cyclop
-     - depguard
-     - exhaustruct
-     - forbidigo
-     - forcetypeassert
-     - gci
-     - gochecknoglobals
-     - gochecknoinits
-     - godox
-     - godot
-     - err113
-     - gofumpt
-     - mnd
-     - lll
-     - musttag
-     - nakedret
-     - nlreturn
-     - nolintlint
-     - nonamedreturns
-     - tagliatelle
-     - varnamelen
-     - wrapcheck
-     - funlen
+  default: all
+  disable:
+    - cyclop
+    - depguard
+    - err113
+    - exhaustruct
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - godot
+    - godox
+    - lll
+    - mnd
+    - musttag
+    - nakedret
+    - nlreturn
+    - nolintlint
+    - nonamedreturns
+    - tagliatelle
+    - varnamelen
+    - wrapcheck
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - revive
+          - staticcheck
+        path: internal/akcp/sensorProbePlus/sensorProbePlus.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
