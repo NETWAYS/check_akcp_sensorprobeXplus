@@ -1,7 +1,7 @@
 github.com/NETWAYS/go-check v0.6.4 h1:4WETSVNZNEP0Yudcp5xlvxq6RGn920cmUKq4fz/P1GQ=
 github.com/NETWAYS/go-check v0.6.4/go.mod h1:8/GWnq8SirreAixgRmcp82JG16NnEl38rHq9phICy9s=
-github.com/gosnmp/gosnmp v1.45.0 h1:dc3Y/F7qhY8v+Eeb+3Hq+AnSBxQ8mGbwoHEPgWZRkxI=
-github.com/gosnmp/gosnmp v1.45.0/go.mod h1:LWPVcDKeRsiioQGeITGTQha4mdlx9lgmRmXz6zGINQ4=
+github.com/gosnmp/gosnmp v1.46.0 h1:Apkq4YaK2G8l/0b9mSQ5ht0RtPlieoARRtSfA/+Xk4E=
+github.com/gosnmp/gosnmp v1.46.0/go.mod h1:LWPVcDKeRsiioQGeITGTQha4mdlx9lgmRmXz6zGINQ4=
 github.com/spf13/pflag v1.0.10 h1:4EBh2KAYBwaONj6b2Ye1GiHfwjqyROoF4RwYO+vPwFk=
 github.com/spf13/pflag v1.0.10/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
